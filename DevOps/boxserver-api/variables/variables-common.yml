@@ -1,0 +1,240 @@
+# Instructions:
+# 1. If you have not already done so, create a DevOps folder at the root of your code repository
+# 2. In that folder, create another folder that will be the devops name of your deployable. this will coordinate
+#    with your docker image name and your helm release name. e.g. connect-api, caerus-import-manager, hermes-message-sender
+# 3. In that folder, create another folder called variables.
+# 4. Copy this file to the root of the deployable folder, ensuring it is named variables-common.yml
+# 5. Read the description of each of the required variable and provide the appropriate value for your deployable.
+# 6. Read through the optional variables and determine if your deployable needs to override the default values of any of them.
+variables:
+  # file name in variables for debugging yaml
+  - name: variableTemplateFile
+    value: 'caller variables-common.yml'
+
+  ### Required Variables ###
+  # Variables used across various build and/or deploy pipelines and are required for the pipeline(s) to function.
+
+  # This serves as the devops name for the deployable. This will be the name of your docker image repository and the name of the helm release.
+  # It is recommended to coordinate this with the name of the DevOps folder created for the associated deployable.
+  # Examples: connect-api, caerus-import-manager, hermes-message-sender
+  - name: applicationDeployableName
+    value: 'boxserver-api'
+
+  # This is the prefix for ingress hosts. On test, dev, and prod the host will be {ingressPrefix}api{ingressEnvironment}-{availabilityZoneLower}.loyalhealth.internal
+  # in development and preprod the host will have a dash before api. {ingressPrefix}-api{ingressEnvironment}-{availabilityZoneLower}.loyalhealth.internal
+  - name: ingressPrefix
+    value: 'boxserver'
+
+  # This value is for determining the main cs project file for the application when generating a Dockerfile, or the Dockerfile itself. The value is the
+  # full file path to the csproj file, relative to the source code root. For instance, if your csproj
+  # file is located at ./src/BackendTemplateApi/BackendTemplateApi.csproj and
+  # your source code root is ./src, the value would be boxserverApi/boxserverApi.csproj
+  # Examples: ConnectAPI/ConnectAPI.csproj, Hermes.Api/Hermes.Api.csproj
+  # Examples: DevOps/Dockerfile
+  - name: dockerMainFile
+    value: BoxServerApi/BoxServerApi.csproj
+
+  # This is the file path to the root of the source code. This value is often used as the docker build context. Normally, this value will either
+  # be the root of the code repository or a subfolder within the repository.
+  # Examples: ./, ./src
+  - name: sourceCodeRoot
+    value: ./src
+
+  ### Optional Variables ###
+  # These variables are not required for basic build and deploy functionality.
+  # Implement these variables as needed for your specific use case.
+
+  ### ACR CLEANUP VARIABLES ###
+  # This value will turn on the ACR cleanup task.
+  # The default value is 'true'
+  - name: acrSkipCleanup
+    value: 'false'
+
+  # This value will cleanup repositories in ACR cleanup task. If true, it just logs what it will delete.
+  # The default value is 'true'
+  - name: acrDryRun
+    value: 'false'
+
+  # This is the number of tags to keep in addition to the current on for the ACR cleanup task
+  # The default value is 2.
+  # - name: acrTagsToKeep
+  #   value: 1
+
+  # This value is the name of the ACR repository to clean up.
+  # The default is an empty string, which will default to $(ApplicationDeployableName)
+  # This is value is case sensitive!
+  # - name: acrRepository
+  #   value: $(ApplicationDeployableName)
+
+  # This value is the name of the ACR perses repository to clean up.
+  # The default is an empty string and if runPerses is true, it be set to $(ApplicationDeployableName)-perses
+  # This should match persesRepositoryOverride below
+  # This is value will be folded to lower case
+  # - name: acrPersesRepository
+  #   value: $(ApplicationDeployableName)-perses
+
+  ### OTHER VARIABLES ###
+  # This is the value of this repository. It will default to the Azure DevOps Project name. Set if it is different
+  # - name: repoName
+  #   value: $(System.TeamProject)
+
+  # This value is used to pass build arguments to the docker build command.
+  # Possible use cases for overriding this value include: your application requires special build arguments, your application isn't built using
+  # an out-of-the-box microsoft application template.
+  #- name: buildArguments
+  #  value: '--build-arg BUILD_VERSION=$(Build.BuildNumber)'
+
+  # This value is used by the make dockerfile task to determine what dependent projects are needed to build the application.
+  # It is represented as a json array of file paths, relative to the source code root.
+  # Possible use cases for overriding this value include: Your application has dependent projects that need to be built into the docker image.
+  # These values can be found as project references in the main csproj file.
+  # The default is an empty array, with no dependent projects.
+  - name: dockerDependentProjectsJson
+    value: |
+      [
+        "BoxServer/BoxServer.csproj",
+        "BoxServerModels/BoxServerModels.csproj"
+      ]
+
+  # A JSON array of env values to pass into the docker for unit tests, if not already set in the Dockerfile. Array of strings with space separated key value pairs.
+  # Example: ["ASPNETCORE_ENVIRONMENT Development", "ASPNETCORE_URLS http://+:80"]
+  # - name: dockerEnvironmentVariables
+  #   value: "[]"
+
+  # This value is used by the make dockerfile task to determine what test projects represent the unit test suite for the application.
+  # It is represented as a json array of file paths, relative to the source code root.
+  # Possible use cases for overriding this value include: Your application has one or more unit tests.
+  - name: dockerUnitTests
+    value: |
+      [
+        "test/unit/unit.csproj"
+      ]
+
+  # If you don't want to have the .dockerignore file generated, you can supply your own file path here. Or you can supply a JSON array of entries to add to a .dockerignore.
+  # Example: ["bin", "obj"]
+  # Example: src/.dockerignore
+  # - name: dockerIgnore
+  #   value: ""
+
+  # This value is used by the dockerfile task to determine what sdk version to use for the docker build. This should match your project's target framework.
+  # We only support .net versions that are still in support by microsoft. Those are currently 6.0 and 8.0.
+  # The default value is 8.0.
+  - name: dockerSdkVersion
+    value: 9.0
+
+  # When scanning the docker image (see above), this value will fail the build if any HIGH vulnerabilities are found.
+  # The default value is false.
+  # - name: failIfImageHasHighVulnerabilities
+  #   value: 'true'
+
+  # This is the default timeout for Helm
+  # - name: helmTimeoutMin
+  #   value: 7
+
+  # This value will make image and container changes needed in order for an application to be
+  # able to authenticate to a data source using Kerberos.
+  # - name: addKerberosAuthentication
+  #   value: true
+
+  # For deploy pipeline, make the prod deploy automatic instead of manual. Default is false
+  # - name: automaticProdDeploy
+  #   value: 'true'
+
+  ### PERSES VARIABLES ###
+  # This it the name of the Perses Docker repository
+  # Override this if {variables.applicationDeployableName}-perses is not your Perses repository name
+  # If you do ACR scanning this should match acrPersesRepository
+  # - name: persesRepositoryOverride
+  #   value: 'todo-perses'
+
+  # This is the sentry DSN for the perses application for logging any errors. The pipeline should also show logs
+  # Override this if you have a different sentry DSN for your application.
+  # - name: persesSentryDsn
+  #   value: 'https://ac568aeeadad400f9451168e161f9c57@sentryio.loyalhealth.com/99' # perses
+
+  # This is the secret name for the client connection string for the perses application. This is for the regular database
+  # If you use the consumer db, this will be different
+  # - name: persesClientConnectionStringSecret:
+  #   value: 'perses-sql-connection-string'
+
+  # This is the secret name for the master connection string for the perses application.
+  # - name: persesMasterConnectionStringSecret
+  #   value: 'perses-sql-master-connection-string'
+
+  # This value represents any perses scripts folders that need to be included in the build, in addition to the default perses scripts folder.
+  # Possible use cases for overriding this value include: Your application needs to manage multiple perses scripts folders in the same pipeline.
+  # The default is empty, with no additional perses scripts folders.
+  - name: persesExtraCopy
+    value: ./Scripts/Bootstrap Bootstrap/
+
+  # This value represents the folder where the perses scripts are located. This value is used by the perses job to determine where to find the scripts.
+  # Possible use cases for overriding this value include: Your application has perses scripts in a different folder than the default.
+  # The default is ./Scripts/.
+  - name: persesScriptsFolder
+    value: ./Scripts/BoxServer
+
+  # This value should be set to true if you want the perses build and deploy job to run as part of this pipeline.
+  - name: runPerses
+    value: "true"
+
+  # This value is used to pass build arguments to the perses docker build command.
+  # - name: persesBuildArguments
+  #   value: "--build-arg PERSES_BUILD=master"
+
+  # This is used for Perses-only pipelines to avoid trying to deploy the application.
+  # - name: skipDeploy
+  #   value: 'false'
+
+  # Set to true on some steps to get more verbose output
+  # - name: verbose
+  #   value: 'true'
+
+  ### INTEGRATION TEST VARIABLES ###
+  # This value enables running the integration tests as part of the pipeline.
+  # To add integration tests, uncomment out this AND edit integration-test-steps.yml
+  # - name: integrationTestJob
+  #   value: DevOps/boxserver-api/integration-test-steps.yml@self # must include @self to indicate the yaml is from this repo and not the template repo
+
+  # This is version of .NET to install for running integration tests.
+  # - name: integrationTestDotNetVersion
+  #   value: '8.0.x'
+
+  ### DANGER ZONE ###
+  # This is the ACR registry name to use for the docker image.
+  # - name: registry
+  #   value: "loyal-container-registry-identity-$(System.TeamProject)"
+
+  # This is the list of tags to apply to the docker image.
+  # - name: buildTags
+  #   value: "dev-$(Build.BuildId),development-$(Build.BuildId),test-$(Build.BuildId),preprod-$(Build.BuildId),prod-$(Build.BuildId)"
+
+  # This is the helm chart version to deploy.
+  # - name: chartVersion
+  #   value: '3.1.0'
+
+  # This is the helm chart to deploy.
+  # - name: chartName
+  #   value: 'oci://loyal.azurecr.io/helm/loyal-app'
+
+  # Set to true to get a prerelease version of the k8sUtils
+  # - name: k8sUtilsPrerelease
+  #   value: 'true'
+
+  # Set if you only want to build. No deploy or integration tests
+  # Cron jobs may use this or utility apps that don't need to deploy like Perses, or the Feature Toggle importer
+  # - name: buildOnly
+  #   value: 'true'
+
+  # ACR cleanup. This is the K8s environment to use to find the highest version of the image to keep.
+  # CHANGING THIS MAY DELETE PRODUCTION TAGS. BE CAREFUL.
+  # Change to 'dev' if your app is only deployed to test and dev.
+  # Change to 'test' if your app is only deployed to test.
+  # The default value is prod
+  # - name: acrEnvironment
+  #   value: 'dev'
+
+  # Set to use a prerelease (PR-build) of Perses for testing
+  # Default is master
+  # - name: persesTag
+  #   value: '136768-prerelease'
+

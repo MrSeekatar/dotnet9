@@ -1,0 +1,189 @@
+openapi: 3.0.1
+info:
+  title: BoxServer API
+  description: 'API and objects for BoxServer'
+  version: 1.0.0
+externalDocs:
+  description: Repo URL
+  url: http://github.com
+servers:
+- url: https://localhost:44300/api/v1
+tags:
+- name: Box
+  description: CRUD operations for Box
+paths:
+  /{clientId}/box:
+    post:
+      tags:
+        - Box
+      summary: Create a new box
+      operationId: newBox
+      parameters:
+        - $ref: '#/components/parameters/clientIdParam'
+      requestBody:
+        description: Box object that needs to be added
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/box'
+        required: true
+      responses:
+        400:
+          description: Invalid ID supplied
+          content: {}
+        405:
+          description: Validation exception
+          content: {}
+    put:
+      tags:
+        - Box
+      summary: Update an existing box to create a new version
+      parameters:
+        - $ref: '#/components/parameters/clientIdParam'
+      operationId: updateBox
+      requestBody:
+        description: Box object that needs to be updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/box'
+        required: true
+      responses:
+        400:
+          description: Invalid ID supplied
+          content: {}
+        404:
+          description: Box not found
+          content: {}
+        405:
+          description: Validation exception
+          content: {}
+  /{clientId}/box/{id}:
+    delete:
+      tags:
+        - Box
+      summary: Delete an existing box
+      parameters:
+        - $ref: '#/components/parameters/clientIdParam'
+        - $ref: '#/components/parameters/idParam'
+      operationId: deleteBox
+      responses:
+        400:
+          description: Invalid ID supplied
+          content: {}
+        404:
+          description: Box not found
+          content: {}
+        405:
+          description: Validation exception
+          content: {}
+    get:
+      tags:
+        - Box
+      summary: Get a box by Id
+      operationId: getBox
+      parameters:
+        - $ref: '#/components/parameters/idParam'
+        - $ref: '#/components/parameters/clientIdParam'
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/box'
+        400:
+          description: Invalid ID supplied
+          content: {}
+        405:
+          description: Validation exception
+          content: {}
+components:
+  parameters:
+    clientIdParam:
+      name: clientId
+      in: path
+      required: true
+      schema:
+        type: string
+    idParam:
+      name: id
+      description: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    limitParam:
+      name: limit
+      in: query
+      description: limit of items to return (page size)
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+    offsetParam:
+      name: offset
+      in: query
+      description: offset for first item to retrieve
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+    queryParam:
+      name: q
+      in: query
+      description: prefix for getting strings
+      required: true
+      style: form
+      explode: true
+      schema:
+        type: string
+  schemas:
+    box:
+      description: Box object for adding and updating a box
+      type: object
+      required:
+        - version
+        - active
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of box
+        boxId:
+          type: string
+          format: uuid
+          description: Set by the system, the id of this box.
+        description:
+          type: string
+          description: English internal description
+        createdOn:
+          type: string
+          description: Set by the system when the box is created
+          format: date-time
+        active:
+          description: If not active, the Box can not run.
+          type: boolean
+          default: true
+  securitySchemes:
+    boxstore_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://boxstore.swagger.io/oauth/dialog
+          scopes:
+            write:boxs: modify boxs in your account
+            read:boxs: read your boxs
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header

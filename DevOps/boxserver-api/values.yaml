@@ -1,0 +1,240 @@
+namespace: default
+serviceName: #{applicationDeployableName}#
+
+selectorLabels:
+  app: #{applicationDeployableName}#
+
+deployment:
+  create: true
+  replicaCount: 1
+
+  ## @section deployment metadata labels
+  ## e.g:
+  ## labels:
+  ##   key: value
+  labels:
+    null
+
+  ## @section deployment metadata annotations
+  ## e.g:
+  ## annotations:
+  ##   key: value
+  annotations:
+    linkerd.io/inject: enabled
+
+  ## @section Loyal Image parameters
+  ## ref: https://loyal.azurecr.io
+  ## @param mainImage.name Loyal image name
+  ## @param mainImage.repository Loyal image repository
+  ## @param mainImage.tag Loyal image tag
+  ## @param mainImage.pullPolicy Loyal image pull policy
+  ##
+  mainImage:
+    image: #{applicationDeployableName}#
+    tag: #{imageTag}#
+    pullPolicy: IfNotPresent
+
+  ## @section Pod metadata labels
+  ## e.g:
+  ## podLabels:
+  ##   key: value
+  podLabels:
+    # azure.workload.identity/use: "true"
+    null
+
+  ## @section Pod metadata annotations
+  ## e.g:
+  ## podAnnotations:
+  ##   key: value
+  podAnnotations:
+    linkerd.io/inject: enabled
+
+  ## @param serviceAccount ServiceAccount name
+  ## @param serviceAccount.automountServiceAccountToken bool
+  ##
+  serviceAccount:
+    name: loyal
+    automountServiceAccountToken: true
+
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+  ## @param livenessProbe.httpGet
+  ## @param livenessProbe.httpGet.scheme Protocol to use
+  ## @param livenessProbe.httpGet.path Path to test
+  ## @param livenessProbe.httpGet.port Port type to use (ex. https)
+  ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe default: 0
+  ## @param livenessProbe.periodSeconds Period seconds for livenessProbe default: 10
+  ## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe default: 1
+  ## @param livenessProbe.failureThreshold Failure threshold for livenessProbe default: 3
+  ## @param livenessProbe.successThreshold Success threshold for livenessProbe default: 1 (must be 1 for livenessProbe and startup)
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 60
+    httpGet:
+      scheme: HTTPS
+      path: /api/warmup
+      port: https
+
+  ## @param readinessProbe.httpGet
+  ## @param readinessProbe.httpGet.scheme Protocol to use
+  ## @param readinessProbe.httpGet.path Path to test
+  ## @param readinessProbe.httpGet.port Port type to use (ex. https)
+  ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+  ## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+  ## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+  ## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+  ## @param readinessProbe.successThreshold Success threshold for readinessProbe
+  ##
+  readinessProbe:
+    initialDelaySeconds: 15
+    timeoutSeconds: 60
+    httpGet:
+      scheme: HTTPS
+      path: /api/warmup
+      port: https
+
+  ## @param startupProbe.httpGet
+  ## @param startupProbe.httpGet.scheme Protocol to use
+  ## @param startupProbe.httpGet.path Path to test
+  ## @param startupProbe.httpGet.port Port type to use (ex. https)
+  ## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+  ## @param startupProbe.periodSeconds Period seconds for startupProbe
+  ## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
+  ## @param startupProbe.failureThreshold Failure threshold for startupProbe
+  ## @param startupProbe.successThreshold Success threshold for startupProbe
+  ##
+  startupProbe:
+    periodSeconds: 10
+    failureThreshold: 48
+    httpGet:
+      scheme: HTTPS
+      path: /api/warmup
+      port: https
+
+  ## Configure Container Security Context (only main container)
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param securityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+  ## @param securityContext.allowPrivilegedEscalation Set WordPress container's Security Context allowPrivilegedEscalation
+  ##
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+
+  ports:
+  - name: https
+    containerPort: 44300
+
+  ## Loyal containers' resource requests and limits
+  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+  ## @param resources.limits The resources limits for the container
+  ## @param resources.requests [object] The requested resources for the container
+  ##
+  resources:
+    limits:
+      memory: "1.5Gi"
+      cpu: "500m"
+    requests:
+      memory: "500Mi"
+      cpu: "20m"
+
+  ## @param env Array with extra environment variables to add to the main container
+  ## e.g:
+  ## env:
+  ## - name: FOO
+  ##   value: "bar"
+  ##
+  env:
+    ALLOW_PIPELINES: "false"
+    ALLOW_SELF_SIGNED_CERTIFICATES: "true"
+    ASPNETCORE_ENVIRONMENT: "#{fullEnvironmentName}#"
+    DATABASE__AADTENANTID: "2e706cda-9fe2-48f6-acf7-18156f419c78"
+    ASPNETCORE_URLS: "https://*:44300"
+    KESTREL__USELOCALSSL: "true"
+    KESTREL__CERTFILEPASSWORD: "#{cert-password}#"
+
+  ## @param secretEnv Name of existing Secrets containing extra env vars for the main container
+  ##
+  secretEnv:
+    HEALTHCHECK_USERNAME: healthcheck-username
+    HEALTHCHECK_PASSWORD: healthcheck-password
+    HEALTHCHECK_CLIENT_ID: healthcheck-client-id
+    SQL_ENCRYPTION_PASSWORD: sql-encryption-password
+    SQL_CONNECTION_STRING: sql-connection-string
+    SQL_MASTER_CONNECTION_STRING: sql-master-connection-string
+    DATABASE__CLIENTCONNECTIONSTRING: sql-connection-string
+    DATABASE__MASTERCONNECTIONSTRING: sql-master-connection-string
+    DATABASE__COLMASTERKEYCLIENTID: cmk-client-id
+    DATABASE__COLMASTERKEYCLIENTSECRET: cmk-client-secret
+    SERILOG__WRITETO__0__ARGS__CONNECTIONSTRING: boxserver-insights-connection-string
+
+  ## @param secretEnv Name of existing Secrets containing extra env vars for the main container
+  ##
+  configMapEnv:
+    active_cluster: env-config
+
+ingress:
+  create: true
+  hostname: #{ingressAppName}#-#{ingressEnvironment}#-#{availabilityZoneLower}#.loyalhealth.internal
+
+cronjob:
+  create: false
+
+## Loyal Pod Disruption Budget configuration
+## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+## @param pdb.create Enable a Pod Disruption Budget creation
+## @param pdb.minAvailable Minimum number/percentage of pods that should remain scheduled
+##
+pdb:
+  create: false
+  minAvailable: 1
+
+## Loyal service parameters
+##
+service:
+  ## @param service.create Set to false to disable service deployment
+  create: true
+  ## @param service.port service HTTPS port
+  ##
+  port: 443
+  ## @param service.targetPort Target port for HTTPS
+  ##
+  targetPort: https
+  ## @param service.protocol port protocol
+  ##
+  protocol: TCP
+
+## Loyal Perses DB migration job
+##
+dbMigration:
+  ## @param dbMigration.create Set to true for service requiring DB migration with Perses
+  create: true
+  # This will be set in the release pipeline as a variable on only a single cluster
+
+  ## @section Loyal Perses DB migration image
+  ## @param helperImage.name Loyal Perses image name
+  ## @param helperImage.repository Loyal Perses image repository
+  ## @param helperImage.tag Loyal Perses image tag
+  ## @param helperImage.pullPolicy Loyal Perses image pull policy
+  ##
+  helperImage:
+    image: #{applicationDeployableName}#-perses
+    tag: #{imageTag}#
+    pullPolicy: IfNotPresent
+
+  restartPolicy: Never
+  ## @param migrationEnv Array with extra environment variables to add to the Perses container
+  ## e.g:
+  ## env:
+  ## - name: FOO
+  ##   value: "bar"
+  ##
+  migrationEnv:
+    PERSES__FOLDERPATH: ./Scripts/
+    SERILOG__WRITETO__0__ARGS__DSN: "https://3a2ea2d4b53e413b92cbdedd3eec9ecd@sentryio.loyalhealth.com/2"
+    SERILOG__WRITETO__0__ARGS__ENVIRONMENT: "#{fullEnvironmentName}#"
+    PERSES__JOURNALTABLE: "BoxServer"
+    PERSES__ENVIRONMENT: "#{fullEnvironmentName}#"
+  ## @param migrationSecretEnv Array with extra Secret environment variables to add to the Perses container
+  ##
+  migrationSecretEnv:
+    PERSES__CLIENTCONNECTIONSTRING: perses-sql-connection-string
+    PERSES__MASTERCONNECTIONSTRING: perses-sql-master-connection-string

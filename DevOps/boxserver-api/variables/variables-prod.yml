@@ -1,0 +1,23 @@
+parameters:
+  - name: availabilityZone
+    type: string
+    default: SC
+
+variables:
+  - template: variables-common.yml
+
+  # file name in variables for debugging yaml
+  - name: variableTemplateFile
+    value: 'caller variables-prod.yml'
+
+  # add environment-specific variables here
+
+  # comma-separated list of tags to run in the playwright tests
+  - name: playwrightTags
+    value: ok
+
+  - name: helmTimeoutMin
+    value: 4
+
+  - name: ingressEnvironment
+    value: 'prod'

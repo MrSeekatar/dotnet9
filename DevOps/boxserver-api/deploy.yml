@@ -1,0 +1,78 @@
+### Implementation Instructions ###
+# 1. If you have not already done so, create a DevOps folder at the root of your code repository
+# 2. In that folder, create another folder that will be the devops name of your deployable. this will coordinate
+#    with your docker image name and your helm release name. e.g. connect-api, caerus-import-manager, hermes-message-sender
+# 3. Copy this file to the root of the deployable folder, ensuring it is named deploy.yml
+# 4. Find each TODO in this file and follow the instructions to provide the appropriate value for your deployable.
+
+### Semantic Version ###
+# This value represents the version of the build.
+# The recommended format is to keep it in line with the devops-templates versioning. this will allow for scripted updates in the future.
+# See the ref property on the loyal-templates repository in the resources section for that value.
+name: '1.3.$(Rev:r)-$(DeploySuffix)'
+
+### Deploy Parameters ###
+# Allows the use of non-default values in the event of a manually invoked deployment
+parameters:
+  # TODO:    change the default to the environments you want to deploy to after a build
+  #          in the master branch. This should be a comma-separated list of environments.
+  #          Valid values are: test, dev, prod, development, preprod
+  # List of environments to deploy to, overriding the default workflow logic.
+  # This should only be used in special cases where a deployment needs to be made to a specific environment.
+  - name: environmentOverrides
+    type: string
+    displayName: Comma-separated list of environments to deploy to. Valid values are (test,dev,development,preprod,prod)
+    default: 'test,dev'
+
+  # Specifies whether to perform a dry run of the pipeline.
+  # When set to `true`, the pipeline executes all of the steps of the deployment, but performs a dry run of the helm upgrade,
+  # rather than an actual helm upgrade.
+  # This can be useful for testing the pipeline and running tests without deploying the release.
+  - name: isDryRun
+    displayName: Do a Dry Run
+    type: boolean
+    default: false
+
+### CI Triggers ###
+# Provides rules for the branch and source control events will trigger the build.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#ci-triggers
+trigger: none
+pr: none
+
+### Pipeline Resources ###
+# This section specifies the service connection details needed for using any external resources, namely the loyalhealth/devops-templates repository
+# and the build pipeline that will supply the docker image for the deployment.
+# This should reference the shared github connection that has been shared with each Azure DevOps project.
+resources:
+  repositories:
+    - repository: loyal-templates
+      type: github
+      name: loyalhealth/devops-templates
+      ref: releases/v1.3
+      # TODO:    update to the name of the shared github connection service connection in the Azure DevOps project.
+      #          the suffix should be the name of the azure devops project.
+      # EXAMPLE: github-connection-ConnectApi
+      endpoint: github-connection
+
+  # TODO:    update to the name of the build source pipeline from the Azure DevOps project.
+  #          the suffix should be the name of the build pipeline that published the docker image
+  # EXAMPLE: build_connect-api
+  pipelines:
+    - pipeline: build
+      source: build_boxserver-api
+      trigger:
+        branches:
+          include:
+            - master
+
+### Template Extensions ###
+# Each deploy pipeline should extend a loyal template that standardizes the release process.
+# For details on the available templates, see the devops-templates repository.
+extends:
+  template: deploy_dotnet-application.yml@loyal-templates
+  parameters:
+    # TODO:    update to the path of where the deployable's DevOps files are located
+    # EXAMPLE: ./DevOps/connect-api
+    devOpsRootPath: ./DevOps/boxserver-api
+    environmentOverrides: ${{ parameters.environmentOverrides }}
+    isDryRun: ${{ parameters.isDryRun }}

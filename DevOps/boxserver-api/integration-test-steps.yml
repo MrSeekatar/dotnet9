@@ -1,0 +1,60 @@
+# Sample integration test steps for a .NET application
+
+# If you do not have integration tests, you can delete this file
+# If you do have integration tests, modify this file to run them
+# AND uncomment out integrationTestJob in common-variables.yml to point to this file. See the comments in that file for more information
+
+### Parameters ###
+# These are pass to you from the template to give you context
+parameters:
+  - name: availabilityZone
+    type: string
+    displayName: Azure Availability Zone
+
+  - name: environment
+    type: string
+    displayName: Environment
+
+  - name: resultsDirectory
+    type: string
+    displayName: Folder for test results
+
+steps:
+  # At this point:
+  # 1. You code is checked out
+  # 2. .NET is installed using variables.integrationTestDotNetVersion, which defaults to latest version
+  # 3. K8s login is done so you can run kubectl commands
+  # 4. Environment variables are set from the template and your variables-<env>.yml
+  # 5. loyal-cicd-kv-dev key vault has been loaded
+  # 6. The Loyal .NET source has been added
+
+  # TODO add any pre-steps here, for example
+  # - pwsh: |
+  #     nohup kubectl port-forward svc/redis-service 9001:6380 &
+  #     nohup kubectl port-forward svc/aiapi-service 9002:443 &
+  #     sleep 6
+  #     REDIS_PASSWORD=$(kubectl get secret redis-password -o jsonpath={.data.redis-password} | base64 -d)
+  #     echo "##vso[task.setvariable variable=redis-password;issecret=true;isreadonly=true]$REDIS_PASSWORD"
+  #   displayName: 'K8s Port forward services & get secrets'
+
+  # TODO run your integration tests here, adding any environment variables needed with env:
+  # Do not be tempted to use ${{}} or $() within the script block since if there are quotes or special characters in the value
+  # it may cause syntax errors when the script is parses (bash or powershell)
+  - pwsh: |
+      # this does nothing. Add your integration test command here
+      echo "dotnet test --logger 'trx;LogFileName=IntegrationTests.trx' --results-directory $env:resultsDirectory --filter FullyQualifiedName~IntegrationTests"
+    displayName: 'Run integration test'
+    workingDirectory: $(Build.SourcesDirectory)/src/test/integration
+    env:
+      resultDirectory: ${{ parameters.resultsDirectory }}
+      # env variables for the integration tests code
+      appName: $(appName)
+      SERVICE__USERNAME: $(integration_userId)
+      SERVICE__PASSWORD: $(integration_password)
+      ApiTests__URIPREFIX: 'https://boxserverapi-${{ parameters.environment }}-sc.loyalhealth.internal'
+
+  # TODO add any post-steps here, for example, pay attention to the condition: always()
+  # - bash: |
+  #     pkill -f port-forward
+  #   displayName: 'Kill k8s port-forwards'
+  #   condition: always() # always runs even if a previous step fails or the job is canceled

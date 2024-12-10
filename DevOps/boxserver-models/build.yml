@@ -1,0 +1,74 @@
+### Implementation Instructions ###
+# 1. If you have not already done so, create a DevOps folder at the root of your code repository
+# 2. In that folder, create another folder that will be the devops name of your deployable. this will coordinate
+#    with your docker image name and your helm release name. e.g. connect-api, caerus-import-manager, hermes-message-sender
+# 3. Copy this file to the root of the deployable folder, ensuring it is named build.yml
+# 4. Find each TODO in this file and follow the instructions to provide the appropriate value for your deployable.
+
+### Semantic Version ###
+# This value represents the version of the build.
+# The recommended format is to keep it in line with the devops-templates versioning. this will allow for scripted updates in the future.
+# See the ref property on the loyal-templates repository in the resources section for that value.
+name: "1.3.$(Rev:r)$(BuildSuffix)"
+
+### Build Parameters ###
+# Allows the use of non-default values in the event of a manually invoked build
+parameters:
+
+  # Specifies whether to to push the nupkg even if running manually
+  # When set to `true`, the nupkg will be pushed.
+  - name: isForcePush
+    type: boolean
+    displayName: Push the nupkg for manual builds
+    default: false
+
+### CI Triggers ###
+# Provides rules for the branch and source control events will trigger the build.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#ci-triggers
+trigger:
+  branches:
+    include:
+      - refs/heads/master
+  paths:
+    include:
+      - 'src/BoxServerModels'
+
+### PR Triggers ###
+# Provides rules for the pull request events that will trigger the build.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github?view=azure-devops&tabs=yaml#pr-triggers
+pr:
+  paths:
+    include:
+      - 'src/BoxServerModels'
+
+### Pipeline Resources ###
+# This section specifies the service connection details needed for using any external resources, namely the loyal-templates repository.
+# This should reference the shared github connection that has been shared with each Azure DevOps project.
+resources:
+  repositories:
+    - repository: loyal-templates
+      type: github
+      name: loyalhealth/devops-templates
+      ref: releases/v1.3
+      # TODO:    update to the name of the shared github connection service connection in the Azure DevOps project.
+      #          the suffix should be the name of the azure devops project.
+      # EXAMPLE: github-connection-ConnectApi
+      endpoint: github-connection-boxserver
+
+### Template Extensions ###
+# Each build pipeline should extend a loyal template that standardizes the build process.
+# For details on the available templates, see the loyal-templates repository.
+extends:
+  template: build_dotnet-sdk.yml@loyal-templates
+  parameters:
+    # TODO:    update the app name for slack messages and job names
+    # EXAMPLE: BackendTemplate
+    appName: BoxServer
+    # TODO:    update to the path to the csproj or mask of csproj files to build
+    # EXAMPLE: src/BackendTemplateModels/BackendTemplateModels.csproj
+    nugetPath: src/BoxServerModels/BoxServerModels.csproj
+    isForcePush: ${{ parameters.isForcePush }}
+    # default parameters
+    # buildVersion: $(Build.BuildNumber)
+    dotnetSdkVersion: '9.0.x'
+
