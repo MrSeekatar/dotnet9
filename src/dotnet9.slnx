@@ -1,11 +1,12 @@
 ﻿<Solution>
-  <Folder Name="/test-integration/">
+  <!-- <Folder Name="/test-integration/">
     <Project Path="test\integration\integration.csproj" />
   </Folder>
   <Folder Name="/test-unit/">
     <Project Path="test\unit\unit.csproj" />
-  </Folder>
+  </Folder> -->
   <Project Path="BoxServerApi\BoxServerApi.csproj" />
   <Project Path="BoxServerModels\BoxServerModels.csproj" />
   <Project Path="BoxServer\BoxServer.csproj" />
+  <Project Path="BoxUI\BoxUI.csproj" Type="Classic C#" />
 </Solution>

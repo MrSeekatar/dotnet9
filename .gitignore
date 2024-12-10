@@ -350,3 +350,15 @@ src/Dockerfile
 !/.vscode/tasks.json
 **/shared.appsettings*.json
 !/DevOps/boxserver-api/.dockerignore
+
+# Blazor specific ignores
+bin/
+obj/
+wwwroot/
+.vscode/
+.idea/
+*.swp
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

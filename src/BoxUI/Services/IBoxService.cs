@@ -1,6 +1,11 @@
+using BoxUI.Models;
+using Refit;
+
 namespace BoxUI.Services;
 
-public interface IBoxService
+internal interface IBoxService
 {
-    
+    [Get("/box")]
+    Task<List<Box>> GetBoxes();
+
 }

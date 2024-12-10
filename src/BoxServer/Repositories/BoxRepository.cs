@@ -7,9 +7,26 @@ using MassTransit;
 
 namespace BoxServer.Repositories;
 
-public class BoxRepository(ILogger<BoxRepository> logger) : IBoxRepository
+public class BoxRepository : IBoxRepository
 {
     private readonly ConcurrentDictionary<Guid, Box> _boxes = new();
+    private ILogger<BoxRepository> logger;
+
+    public BoxRepository(ILogger<BoxRepository> _logger)
+    {
+        logger = _logger;
+        for (int i = 0; i < 10; i++)
+        {
+            Box box = new()
+            {
+                BoxId = NewId.NextGuid(),
+                Name = $"Box {i}",
+                Description = $"Description {i}",
+                CreatedOn = DateTime.UtcNow - TimeSpan.FromDays(i)
+            };
+            _boxes.TryAdd(box.BoxId.Value, box);
+        }
+    }
 
     public async Task<bool> DeleteBox(Guid id)
     {
