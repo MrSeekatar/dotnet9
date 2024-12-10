@@ -1,0 +1,58 @@
+@page "/messages"
+@rendermode InteractiveServer
+@using BoxServer.Hubs
+@using BoxServer.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Messages</PageTitle>
+
+<div>
+Box Messages:
+<div style="font-size: smaller; margin-left: 20px;">
+    Open another tab and bang on Boxes
+</div>
+</div>
+<hr>
+
+<ul id="messagesList">
+    @foreach (var message in messages)
+    {
+        <li>@message</li>
+    }
+</ul>
+
+@code {
+    private HubConnection? hubConnection;
+    private readonly List<string> messages = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("https://localhost:44300/messageHub")
+            .Build();
+
+        hubConnection.On<Message>(MessageHub.MessageName, (message) =>
+        {
+            var type = "";
+            if (message is TypedMessage typedMessage)
+            {
+                type = $" [{typedMessage.Type}]";
+            }
+            var encodedMsg = $"{message.Timestamp}{type} {message.Title}: {message.Text}";
+            messages.Add(encodedMsg);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

@@ -15,9 +15,6 @@ For building docker images, use plain output since default collapses output afte
 .PARAMETER NoCache
 For building docker images, add --no-cache
 
-.PARAMETER DeleteDocker
-Add --rm to docker build
-
 .PARAMETER RunDockerTests
 When doing BuildDocker, run the tests in docker
 
@@ -40,7 +37,7 @@ param (
         $runFile = (Join-Path (Split-Path $commandAst -Parent) run.ps1)
         if (Test-Path $runFile) {
             Get-Content $runFile |
-                    Where-Object { $_ -match "^\s+'([\w+-]+)'\s*{" } |
+                    Where-Object { $_ -match "^\s+['`"]([\w+-]+)['`"]\s*{" } |
                     ForEach-Object {
                         if ( !($fakeBoundParameters[$parameterName]) -or
                             (($matches[1] -notin $fakeBoundParameters.$parameterName) -and
@@ -53,54 +50,17 @@ param (
         }
      })]
     [string[]] $Tasks,
-    [string] $DockerTag = [DateTime]::Now.ToString("MMdd-HHmmss"),
     [switch] $Plain,
     [switch] $NoCache,
-    [bool] $DeleteDocker = $True,
-    [switch] $RunDockerTests,
-    [string] $NugetUserName = $env:nuget_username,
-    [string] $NugetPw = $env:nuget_password,
     [int] $TestPort = 44300,
-    [string] $PersesTag = "latest"
+    [string] $CertPassword = $env:cert_password
 )
 
-$appName = 'BoxServer' # image, folder, Perses Journal names
-
-function commonPersesArgs([string] $folderPath = "/Scripts/")
-{ @(
-    "--env-file", ".env",
-    "-e", "PERSES__JOURNALTABLE=$appName",
-    "-e", "PERSES__ENVIRONMENT=dev",
-    "-e", "PERSES__FOLDERPATH=$folderPath",
-    "--rm"
-)
-}
+$appName = 'BoxServer' # image, folder names
 
 $currentTask = ""
 
-function Get-DockerEnvFile([string[]] $extra) {
-    $folder = $PSScriptRoot
-    while ($folder -and !(Test-Path (Join-Path $folder shared.appsettings.Development.json))) {
-        $folder = Split-Path $folder -Parent
-    }
-    if ($folder -and (Test-Path (Join-Path $folder shared.appsettings.Development.json))) {
-        $env = Get-Content (Join-Path $folder shared.appsettings.Development.json) -raw | ConvertFrom-json
-        Get-Member -input $env -MemberType NoteProperty | ForEach-Object {
-            $name = $_.name
-            "$($name -replace ':','__')=$((($env.$name -replace "`n","\n") -replace "(localhost|127.0.0.1|::1)","host.docker.internal")-replace ':9092',':29092')"
-        } | Out-File (Join-Path $PSScriptRoot ".env") -Encoding ascii
-    } else {
-        Write-Warning "No shared appsettings found."
-        Set-Content (Join-Path $PSScriptRoot ".env") -Encoding ascii -Value ''
-        return
-    }
-    foreach ($e in $extra) {
-        $e | Out-File (Join-Path $PSScriptRoot ".env") -Encoding ascii -Append
-    }
-    "Wrote $(Join-Path $PSScriptRoot ".env")"
-}
-
-function buildDocker( [string] $file, [string] $imageName, [string] $tag, [switch] $runTest ) {
+function buildDocker( [string] $file, [string] $imageName) {
 
     executeSB -RelativeDir 'src' {
         Write-Verbose $PWD
@@ -108,65 +68,21 @@ function buildDocker( [string] $file, [string] $imageName, [string] $tag, [switc
         if ($Plain) {
             $extra += "--progress","plain"
         }
-        if ($DeleteDocker) {
-            $extra += "--rm"
-        }
-        $deleteIgnore = $false
-        $fullPath = Split-Path (Convert-Path $file) -Parent
-        if ((Test-Path (Join-Path $fullPath '.dockerignore')) -and ($fullPath -ne $PWD) ) {
-            $deleteIgnore = $true
-            Copy-Item (Join-Path $fullPath '.dockerignore') '.'
-        }
 
-        if ($IsMacOS -and (uname -m | Select-String ARM64)) {
-            # this assumes you have built the loyal parent images locally for the M1
-            $extra += "--build-arg", "registry=docker.io/library",
-                    "--build-arg", "aspNetVersion=9.0-bookworm-slim-arm64v8",
-                    "--build-arg", "sdkVersion=9.0-bookworm-slim-arm64v8"
-        }
-        $buildExtra = $extra
         if ($NoCache){
-            $buildExtra += "--no-cache"
+            $extra += "--no-cache"
         }
+        $lowerImageName = $imageName.ToLowerInvariant()
 
-        $target = 'build'
-        if ($runTest) {
-            $target = 'build-test-output'
-            $buildExtra += "--output", "../docker-build-output"
-        }
-
-        Write-Verbose "Target is $target File is $file"
-        Write-Verbose "BuildExtra is $($buildExtra -join ' ')"
-        Write-Verbose "Extra is $($extra -join ' ')"
-        "-----------------------------------"
-        "  docker build for publish$($runTest ? ' and test' : '')"
-        "-----------------------------------"
         docker build  `
-                --target $target `
+                --tag ${lowerImageName}:latest `
                 --file $file `
-                @buildExtra `
+                @extra `
                 .
-        "Build and test output written to ../docker-build-output"
-
-        if ($LASTEXITCODE -eq 0) {
-            $lowerImageName = $imageName.ToLowerInvariant()
-            "-----------------------------------"
-            "  docker build for final"
-            "-----------------------------------"
-            docker build  `
-                    --tag ${lowerImageName}:$tag `
-                    --file $file `
-                    @extra `
-                    .
-            if ($LASTEXITCODE -eq 0) {
-                docker tag ${lowerImageName}:$tag ${lowerImageName}:latest
-            }
-        }
-        if ($deleteIgnore) {
-            Remove-Item "./.dockerignore" -Force -ErrorAction SilentlyContinue
-        }
     }
 }
+
+$imageName = "box-api"
 
 # execute a script, checking lastexit code
 function executeSB
@@ -215,129 +131,50 @@ foreach ($currentTask in $Tasks) {
                     dotnet build
                 }
             }
-            'testUnit' {
-                executeSB -RelativeDir "src/test/unit" {
-                    dotnet test
+            "buildApiDocker" {
+                if (!(Test-Path (Join-Path $PSScriptRoot src/aspnetapp.pfx))) {
+                    Write-Warning "No certificate found at src/aspnetapp.pfx. Create with: "
+                    Write-Warning "  dotnet dev-certs https -ep aspnetapp.pfx -p `$env:cert_password"
+                    Write-Warning "  dotnet dev-certs https --trust"
+                    Write-Warning "The password must be the same one you pass in as -CertPassword"
+                    Write-Warning "On Mac and Linux chmod 0644 aspnetapp.pfx"
+                    exit
                 }
+                buildDocker -file "BoxServerApi/Dockerfile" -imageName $imageName
+                docker tag box-api:latest loyal.azurecr.io/box-api:latest # for testing with helm since Loyal's chart uses this
             }
-            'testIntegration' {
-                $prev = $env:ApiTests__URIPREFIX
-                try {
-                    executeSB -RelativeDir "src/test/integration" {
-                        $env:ApiTests__URIPREFIX="https://localhost:$TestPort"
-                        dotnet test
-                }
-                } finally {
-                    $env:ApiTests__URIPREFIX = $prev
-                }
-            }
-            'run' {
+            'runApi' {
                 executeSB -RelativeDir "src/${appName}Api" {
+                    dotnet run
+                }
+            }
+            'runApiDocker' {
+                if (!$CertPassword) {
+                    Write-Warning "No certificate password provided. Use -CertPassword"
+                    exit
+                }
+                docker run --rm -p ${TestPort}:44300 `
+                -e ASPNETCORE_Kestrel__Certificates__Default__Password="$certPassword" `
+                -e ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx `
+                $imageName
+            }
+            "runAppHost" {
+                executeSB -RelativeDir "src/Box.AppHost" {
+                    dotnet run
+                }
+            }
+            "runAspireStandAlone" {
+                docker run --rm -it -p 18888:18888 -p 4317:18889 -d --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+                "Running. To stop it use: docker stop aspire-dashboard"
+            }
+            "runUI" {
+                executeSB -RelativeDir "src/BoxUI" {
                     dotnet run
                 }
             }
             'watch' {
                 executeSB -RelativeDir "src/${appName}Api" {
                     dotnet watch
-                }
-            }
-            'runDocker' {
-                Get-DockerEnvFile
-                executeSB {
-                    $DockerTag = "latest"
-                    docker run --rm `
-                               --env-file .env `
-                               --interactive `
-                               -e aspnetcore_hostBuilder__reloadConfigOnChange=false `
-                               --publish "${TestPort}:44300" `
-                               --tty `
-                               --name $appName `
-                               "$($appName.ToLowerInvariant()):$DockerTag"
-                }
-            }
-            'buildDocker' {
-                $dockerfile = "Dockerfile"
-                executeSB -RelativeDir 'src' {
-                    # If make your Dockerfile, you can skip this MakeDockerfile step
-                    if (!(Get-Command MakeDockerfile -ErrorAction SilentlyContinue)) {
-                        throw "MakeDockerFile is not installed. See https://github.com/loyalhealth/MakeDockerfile"
-                    }
-                    # outputs Dockerfile and .dockerignore to output folder
-                    MakeDockerfile --mainFile ../DevOps/boxserver-api/variables/variables-common.yml --dotnetSdk 9.0 --output .
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Error making Dockerfile"
-                    }
-                }
-
-                buildDocker -file $dockerfile -imageName $appName -tag $DockerTag -runTest $RunDockerTests
-            }
-            'buildPerses' {
-                executeSB -RelativeDir '.' {
-                    $file = "./DevOps/Docker/perses/Dockerfile"
-                    $fullPath = Split-Path (Convert-Path $file) -Parent
-                    if (Test-Path (Join-Path $fullPath '.dockerignore')) {
-                        Copy-Item (Join-Path $fullPath '.dockerignore') '.'
-                    }
-                    $extra = @()
-                    if ($Plain) {
-                        $extra += "--progress","plain"
-                    }
-                    if ($DeleteDocker) {
-                        $extra += "--rm"
-                    }
-                    if ($NoCache) {
-                        $extra += "--no-cache"
-                    }
-                    $lowerAppName = $appName.ToLowerInvariant()
-                    docker build `
-                        --file $file `
-                        --tag "${lowerAppName}-perses:$PersesTag" `
-                        @extra `
-                        .
-                    Remove-Item "./.dockerignore" -Force -ErrorAction SilentlyContinue
-                }
-            }
-            'generate' {
-                if (!(Test-Path ~/swagger-codegen/Invoke-SwaggerGen.ps1)) {
-                    Write-Warning "swagger-codegen not in ~/. You can get with with git clone git@github.com:Seekatar/swagger-codegen.git"
-                }
-                ~/swagger-codegen/Invoke-SwaggerGen.ps1 -OASFile (Join-Path $PSScriptRoot "doc/OAS/openapi.yaml") `
-                                    -Namespace "$AppName.Models" `
-                                    -OutputFolder (Join-Path ([System.IO.Path]::GetTempPath()) 'serverapi') `
-                                    -ControllerNamespace "$appName.Controllers" `
-                                    -RenameController `
-                                    -RemoveEnumSuffix `
-                                    -Force `
-                                    -NoNullGuid `
-                                    -NoToString `
-                                    -NoValidateModel
-                                    # -Verbose
-                "`n`nOutput written to $(Join-Path ([System.IO.Path]::GetTempPath()) 'serverapi')"
-            }
-            'updateDb' {
-                Get-DockerEnvFile
-                executeSB  {
-                    $baseDir = Convert-Path $PSScriptRoot
-                    docker run (commonPersesArgs) -v "$baseDir/Scripts/${AppName}:/Scripts" loyal.azurecr.io/perses:master
-                }
-            }
-            'updateDbDocker' {
-                Get-DockerEnvFile
-                executeSB {
-                    docker run (commonPersesArgs("./Scripts")) "backendtemplate-perses:$PersesTag"
-                }
-            }
-            'bootstrapDb' {
-                Get-DockerEnvFile
-                executeSB {
-                    $baseDir = Convert-Path $PSScriptRoot
-                    docker run (commonPersesArgs) -v "$baseDir/Scripts/Bootstrap:/Scripts" loyal.azurecr.io/perses:master
-                }
-            }
-            'bootstrapDbDocker' {
-                Get-DockerEnvFile
-                executeSB {
-                    docker run (commonPersesArgs "./Bootstrap") boxserver-perses:latest
                 }
             }
             default {

@@ -1,0 +1,92 @@
+﻿@rendermode InteractiveServer
+@page "/box"
+@using BoxUI.Services
+@using Microsoft.AspNetCore.Server.Kestrel.Transport.Quic
+@attribute [StreamRendering]
+@inject IBoxService BoxService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Box</PageTitle>
+
+<h1>Box</h1>
+
+<p>Here are some boxes.</p>
+
+<button @onclick="ShowAddBoxModal"><i class="fas fa-plus"></i></button>
+
+@if (boxes == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var box in boxes)
+        {
+            <tr>
+                <td>@box.Name</td>
+                <td>
+                <button @onclick="() => ShowBoxDetails(box)"><i class="fas fa-pencil-alt"></i></button>
+                <button @onclick="() => DeleteBox(box)"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<AddBoxModal @ref="addBoxModal" OnBoxAdded="OnBoxAdded" />
+
+<BoxDetailsModal @ref="boxDetailsModal" Box="selectedBox" />
+
+@code {
+    private BoxServer.Models.Box[]? boxes;
+    private BoxServer.Models.Box selectedBox = new();
+    private BoxDetailsModal? boxDetailsModal;
+    private AddBoxModal? addBoxModal;
+
+    // OnInitializedAsync is called twice since pre-rendered, so use this to call API only once
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            boxes = (await BoxService.GetBoxes()).ToArray();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShowBoxDetails(BoxServer.Models.Box box)
+    {
+        selectedBox = await BoxService.GetBox(box.BoxId!.Value);
+        boxDetailsModal!.ShowModal();
+    }
+
+    private void ShowAddBoxModal()
+    {
+        addBoxModal!.ShowModal();
+    }
+
+    private async Task DeleteBox(BoxServer.Models.Box box)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete the box '{box.Name}'?");
+        if (confirmed)
+        {
+            await BoxService.DeleteBox(box.BoxId!.Value);
+            boxes = (await BoxService.GetBoxes()).ToArray();
+        }
+    }
+
+    private async Task OnBoxAdded(BoxServer.Models.Box newBox)
+    {
+        boxes = (await BoxService.GetBoxes()).ToArray();
+    }
+}

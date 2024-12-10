@@ -1,0 +1,65 @@
+@using BoxUI.Services
+@inject IJSRuntime JSRuntime
+@inject IBoxService BoxService
+
+<div class="modal" style="display:@(IsVisible ? "block" : "none")">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>Add New Box</h5>
+                <button type="button" class="btn-close" @onclick="OnHideModalClick"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="newBox" OnValidSubmit="HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <InputText @bind-Value="newBox.Name" class="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Description:</label>
+                            <InputText @bind-Value="newBox.Description" class="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Active:</label>
+                            <InputCheckbox @bind-Value="newBox.Active"/>
+                        </div>
+                    </div>
+                    <button type="submit">Add Box</button>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" @onclick="OnHideModalClick">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private BoxServer.Models.Box newBox = new();
+    public bool IsVisible { get; private set; }
+
+    [Parameter]
+    public EventCallback<BoxServer.Models.Box> OnBoxAdded { get; set; }
+
+    public void ShowModal()
+    {
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    private void OnHideModalClick()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await BoxService.AddBox(newBox);
+        await OnBoxAdded.InvokeAsync(newBox);
+        OnHideModalClick();
+    }
+}

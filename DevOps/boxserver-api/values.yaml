@@ -22,17 +22,16 @@ deployment:
   annotations:
     linkerd.io/inject: enabled
 
-  ## @section Loyal Image parameters
-  ## ref: https://loyal.azurecr.io
-  ## @param mainImage.name Loyal image name
-  ## @param mainImage.repository Loyal image repository
-  ## @param mainImage.tag Loyal image tag
-  ## @param mainImage.pullPolicy Loyal image pull policy
+  ## @section Image parameters
+  ## @param mainImage.name image name
+  ## @param mainImage.repository image repository
+  ## @param mainImage.tag image tag
+  ## @param mainImage.pullPolicy image pull policy
   ##
   mainImage:
     image: #{applicationDeployableName}#
     tag: #{imageTag}#
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
 
   ## @section Pod metadata labels
   ## e.g:
@@ -123,7 +122,7 @@ deployment:
   - name: https
     containerPort: 44300
 
-  ## Loyal containers' resource requests and limits
+  ## containers' resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ## @param resources.limits The resources limits for the container
   ## @param resources.requests [object] The requested resources for the container
@@ -145,40 +144,15 @@ deployment:
   env:
     ALLOW_PIPELINES: "false"
     ALLOW_SELF_SIGNED_CERTIFICATES: "true"
-    ASPNETCORE_ENVIRONMENT: "#{fullEnvironmentName}#"
-    DATABASE__AADTENANTID: "2e706cda-9fe2-48f6-acf7-18156f419c78"
+    ASPNETCORE_ENVIRONMENT: "development"
     ASPNETCORE_URLS: "https://*:44300"
-    KESTREL__USELOCALSSL: "true"
-    KESTREL__CERTFILEPASSWORD: "#{cert-password}#"
-
-  ## @param secretEnv Name of existing Secrets containing extra env vars for the main container
-  ##
-  secretEnv:
-    HEALTHCHECK_USERNAME: healthcheck-username
-    HEALTHCHECK_PASSWORD: healthcheck-password
-    HEALTHCHECK_CLIENT_ID: healthcheck-client-id
-    SQL_ENCRYPTION_PASSWORD: sql-encryption-password
-    SQL_CONNECTION_STRING: sql-connection-string
-    SQL_MASTER_CONNECTION_STRING: sql-master-connection-string
-    DATABASE__CLIENTCONNECTIONSTRING: sql-connection-string
-    DATABASE__MASTERCONNECTIONSTRING: sql-master-connection-string
-    DATABASE__COLMASTERKEYCLIENTID: cmk-client-id
-    DATABASE__COLMASTERKEYCLIENTSECRET: cmk-client-secret
-    SERILOG__WRITETO__0__ARGS__CONNECTIONSTRING: boxserver-insights-connection-string
-
-  ## @param secretEnv Name of existing Secrets containing extra env vars for the main container
-  ##
-  configMapEnv:
-    active_cluster: env-config
+    ASPNETCORE_Kestrel__Certificates__Default__Password: "#{cert-password}#"
+    ASPNETCORE_Kestrel__Certificates__Default__Path: /app/aspnetapp.pfx
 
 ingress:
-  create: true
-  hostname: #{ingressAppName}#-#{ingressEnvironment}#-#{availabilityZoneLower}#.loyalhealth.internal
-
-cronjob:
   create: false
 
-## Loyal Pod Disruption Budget configuration
+## Pod Disruption Budget configuration
 ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
 ## @param pdb.create Enable a Pod Disruption Budget creation
 ## @param pdb.minAvailable Minimum number/percentage of pods that should remain scheduled
@@ -187,7 +161,7 @@ pdb:
   create: false
   minAvailable: 1
 
-## Loyal service parameters
+## service parameters
 ##
 service:
   ## @param service.create Set to false to disable service deployment
@@ -201,40 +175,3 @@ service:
   ## @param service.protocol port protocol
   ##
   protocol: TCP
-
-## Loyal Perses DB migration job
-##
-dbMigration:
-  ## @param dbMigration.create Set to true for service requiring DB migration with Perses
-  create: true
-  # This will be set in the release pipeline as a variable on only a single cluster
-
-  ## @section Loyal Perses DB migration image
-  ## @param helperImage.name Loyal Perses image name
-  ## @param helperImage.repository Loyal Perses image repository
-  ## @param helperImage.tag Loyal Perses image tag
-  ## @param helperImage.pullPolicy Loyal Perses image pull policy
-  ##
-  helperImage:
-    image: #{applicationDeployableName}#-perses
-    tag: #{imageTag}#
-    pullPolicy: IfNotPresent
-
-  restartPolicy: Never
-  ## @param migrationEnv Array with extra environment variables to add to the Perses container
-  ## e.g:
-  ## env:
-  ## - name: FOO
-  ##   value: "bar"
-  ##
-  migrationEnv:
-    PERSES__FOLDERPATH: ./Scripts/
-    SERILOG__WRITETO__0__ARGS__DSN: "https://3a2ea2d4b53e413b92cbdedd3eec9ecd@sentryio.loyalhealth.com/2"
-    SERILOG__WRITETO__0__ARGS__ENVIRONMENT: "#{fullEnvironmentName}#"
-    PERSES__JOURNALTABLE: "BoxServer"
-    PERSES__ENVIRONMENT: "#{fullEnvironmentName}#"
-  ## @param migrationSecretEnv Array with extra Secret environment variables to add to the Perses container
-  ##
-  migrationSecretEnv:
-    PERSES__CLIENTCONNECTIONSTRING: perses-sql-connection-string
-    PERSES__MASTERCONNECTIONSTRING: perses-sql-master-connection-string

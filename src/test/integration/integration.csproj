@@ -23,8 +23,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Loyal.Core.Cache" Version="2024.11.14.2" />
-    <PackageReference Include="Loyal.Core.HealthChecks" Version="2024.10.22.2" />
   </ItemGroup>
 
   <ItemGroup>

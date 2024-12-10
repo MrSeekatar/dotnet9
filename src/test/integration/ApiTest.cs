@@ -2,8 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using BoxServer;
 using BoxServer.Models;
-using Loyal.Core.Test;
-using Loyal.Core.Util;
 using static unit.TestConstants;
 
 namespace ApiTest;
@@ -24,7 +22,7 @@ public partial class ApiTests : XUnitHttpClientTestBase<ApiTests>
     }
 
     [Fact]
-    public async Task GetBoxs()
+    public async Task GetBoxes()
     {
         var boxs = await HttpClient!.GetFromJsonAsync<IEnumerable<Box>>($"{UriPrefix}/api/v1/{ScrantonClientId}/box",
             CustomSerializerOptions.Options);

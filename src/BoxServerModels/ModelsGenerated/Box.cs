@@ -50,7 +50,7 @@ namespace BoxServer.Models
         [DataMember(Name="BoxId")]
         [JsonPropertyName("boxId")]
         [Key]
-        public Guid? BoxId { get; set; }
+        public int? BoxId { get; set; }
 
         /// <summary>
         /// English internal description
@@ -68,7 +68,7 @@ namespace BoxServer.Models
 
         [DataMember(Name="createdOn")]
         [JsonPropertyName("createdOn")]
-        public DateTime? CreatedOn { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         /// <summary>
         /// If not active, the Box can not run.
@@ -78,7 +78,7 @@ namespace BoxServer.Models
 
         [DataMember(Name="active")]
         [JsonPropertyName("active")]
-        public bool? Active { get; set; }
+        public bool Active { get; set; }
 
         /// <summary>
         /// Returns the JSON string presentation of the object
@@ -129,7 +129,6 @@ namespace BoxServer.Models
                 ) &&
                 (
                     CreatedOn == other.CreatedOn ||
-                    CreatedOn != null &&
                     CreatedOn.Equals(other.CreatedOn)
                 ) &&
                 (
@@ -154,7 +153,6 @@ namespace BoxServer.Models
                     hashCode = hashCode * 59 + BoxId.GetHashCode();
                     if (Description != null)
                     hashCode = hashCode * 59 + Description.GetHashCode();
-                    if (CreatedOn != null)
                     hashCode = hashCode * 59 + CreatedOn.GetHashCode();
 
                     hashCode = hashCode * 59 + Active.GetHashCode();

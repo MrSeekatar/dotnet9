@@ -7,7 +7,7 @@ namespace unit;
 public partial class MockBoxRepository : IBoxRepository
 {
 
-    public async Task<bool> DeleteBox(string clientId, Guid Id)
+    public async Task<bool> DeleteBox(Guid id)
     {
         var box = await GetBox(clientId, Id).ConfigureAwait(false);
         if (box == null || box.BoxId == null)
@@ -18,14 +18,14 @@ public partial class MockBoxRepository : IBoxRepository
         return true;
     }
 
-    public async Task<Box?> GetBox(string clientId, Guid id)
+    public async Task<Box?> GetBox(Guid id)
     {
         await Task.CompletedTask.ConfigureAwait(false);
 
         return _map.TryGetValue(id.ToString().ToUpperInvariant(), out var box) ? box : null;
     }
 
-    public async Task<IEnumerable<Box>?> GetBoxs(string clientId)
+    public async Task<IEnumerable<Box>?> GetBoxes(string clientId)
     {
         await Task.CompletedTask.ConfigureAwait(false);
 

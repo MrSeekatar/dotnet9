@@ -1,0 +1,131 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"languageName":"csharp","name":"csharp"}]}}
+
+#!markdown
+
+# .NET 9 Samples
+
+These are mainly from the doc, with tweaks to help me understand them better.
+
+## LINQ AggregateBy
+
+Avoids intermediate `GroupBy`
+
+#!csharp
+
+(string id, int score)[] data =
+    [
+        ("0", 42),
+        ("1", 5),
+        ("2", 4),
+        ("1", 10),
+        ("0", 25),
+    ];
+
+var aggregatedData =
+    data.AggregateBy(
+        keySelector: entry => entry.id,                // A function to extract the key for each element.
+        seed: 0,                                       // A factory for the initial accumulator value.
+        (totalScore, curr) => totalScore + curr.score  // An accumulator function to be invoked on each element.
+        );
+
+foreach (var item in aggregatedData)
+{
+    Console.WriteLine(item);
+}
+
+#!markdown
+
+## LINQ CountBy
+
+Avoids intermediate `GroupBy`
+
+#!csharp
+
+string sourceText = """
+    Lorem ipsum dolor sit amet, adipiscing elit.
+    Sed non. sit amet, adipiscing sed, dolor. amet.
+""";
+
+var mostFrequentWord = sourceText
+    .Split(new char[] { ' ', '.', ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+    .Select(word => word.ToLowerInvariant())
+    .CountBy(word => word);
+
+foreach (var pair in mostFrequentWord)
+{
+    Console.WriteLine($"{pair.Key}: {pair.Value}");
+}
+
+#!markdown
+
+## OrderedDictionary
+
+Allows accessing dictionary values by index.
+
+#!csharp
+
+using static System.Console;
+
+OrderedDictionary<string, int> d = new()
+{
+    ["a"] = 1,
+    ["b"] = 2,
+    ["c"] = 3,
+};
+
+d.Add("d", 4);
+d.RemoveAt(0);
+d.RemoveAt(2);
+d.Insert(0, "e", 5);
+
+WriteLine("Enumerate dictionary");
+foreach (KeyValuePair<string, int> entry in d)
+{
+    Console.WriteLine(entry);
+}
+
+WriteLine("Enumerate by index");
+for ( int i = 0; i < d.Count; i++ )
+{
+    WriteLine($"{d.GetAt(i)}");
+}
+
+#!markdown
+
+## Base64Url
+
+Encodes bytes to Base64 without padding or URL-unsafe characters.
+
+#!csharp
+
+using static System.Console;
+using System.Buffers.Text;
+using System;
+using System.Text;
+
+
+var bytes = ASCIIEncoding.ASCII.GetBytes("HelloWorld");
+Console.WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)}   is {ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}");
+Console.WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is {ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}");
+
+#!markdown
+
+## Guid.CreateVersion7 
+
+For creating time ordered Guids
+
+#!csharp
+
+using static System.Console;
+
+WriteLine("Guids:");
+for ( var i = 0; i < 10; i++ ) {
+    WriteLine( Guid.NewGuid() );
+}
+
+WriteLine("Time ordered Guids:");
+for ( var i = 0; i < 10; i++ ) {
+    WriteLine( Guid.CreateVersion7() );
+}

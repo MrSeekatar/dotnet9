@@ -1,0 +1,8 @@
+﻿<Solution>
+  <Project Path="Box.AppHost\Box.AppHost.csproj" Type="Classic C#" />
+  <Project Path="Box.ServiceDefaults\Box.ServiceDefaults.csproj" Type="Classic C#" />
+  <Project Path="BoxServerApi\BoxServerApi.csproj" />
+  <Project Path="BoxServerModels\BoxServerModels.csproj" />
+  <Project Path="BoxServer\BoxServer.csproj" />
+  <Project Path="BoxUI\BoxUI.csproj" Type="Classic C#" />
+</Solution>
