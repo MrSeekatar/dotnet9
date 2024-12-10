@@ -1,7 +1,3 @@
-## ClickUp Ticket
-
-[BoxServer-](https://loyal.clickup.com)
-
 ## Summary of the change
 
 Description here, including screenshots if applicable

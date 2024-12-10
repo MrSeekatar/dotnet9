@@ -344,7 +344,6 @@ src/.dockerignore
 /Dockerfile
 src/Dockerfile
 **/.env*
-**/loyal-app-*.tgz
 **/.persesEnv
 
 !.vscode/CFSnippets.code-snippets

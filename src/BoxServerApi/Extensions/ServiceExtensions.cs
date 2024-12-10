@@ -1,9 +1,5 @@
 using BoxServer.Interfaces;
 using BoxServer.Repositories;
-using Loyal.Core.Database.Utils;
-using Loyal.Core.Extensions;
-using Loyal.Core.HealthChecks.Checks;
-using Loyal.Core.HealthChecks.Extensions;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -27,10 +23,15 @@ internal static class ServiceExtensions
             // unittest not getting a copy of this file for some projects??
             try
             {
-                c.SetApiVersion($"v{apiVersion}", $"{appName} - V{apiVersion}")
-                    .IncludeComments($"{appName}.xml")
-                    .IncludeComments($"{appName}Models.xml")
-                    .IncludeComments($"{appName}Models.xml");
+                c.SwaggerDoc($"v{apiVersion}", new OpenApiInfo
+                {
+                    Title = $"{appName} - V{apiVersion}",
+                    Version = $"v{apiVersion}"
+                });
+
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory,$"{appName}.xml"));
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory,$"{appName}Models.xml"));
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory,$"{appName}Models.xml"));
 
                 c.CustomSchemaIds(type => type.FullName);
                 c.EnableAnnotations(enableAnnotationsForInheritance: true, enableAnnotationsForPolymorphism: true);
@@ -46,10 +47,6 @@ internal static class ServiceExtensions
 
                     return result;
                 });
-
-                c.OperationFilter<DisplayOperationFilter>();
-
-                c.SchemaFilter<StringLengthSchemaFilter>();
             }
             catch (FileNotFoundException)
             {
@@ -64,15 +61,12 @@ internal static class ServiceExtensions
                 .AllowCredentials();
         }));
 
-        // exclude ones we don't use it
-        services.AddLoyalHealthChecks(exclusions: new[] { typeof(RedisHealthCheck) });
-
         return services;
     }
 
     internal static WebApplicationBuilder AddOptions(this WebApplicationBuilder builder)
     {
-        builder.Services.AddDbOptions(builder.Configuration);
+
         return builder;
     }
 }

@@ -1,4 +1,3 @@
-using Loyal.Core.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -61,15 +60,8 @@ public class ErrorController : Controller
         var exceptionHandlerFeature =
             HttpContext.Features.Get<IExceptionHandlerFeature>()!;
 
-        if (exceptionHandlerFeature.Error is ProblemDetailsException pd)
-        {
-            return Problem(pd.Detail, instance: "", pd.Status, pd.Title, pd.ProblemType);
-        }
-        else
-        {
-            return Problem(
-                title: "An unhandled exception has occurred while executing the request (in Error Controller)!",
-                detail: exceptionHandlerFeature.Error.Message);
-        }
+        return Problem(
+            title: "An unhandled exception has occurred while executing the request (in Error Controller)!",
+            detail: exceptionHandlerFeature.Error.Message);
     }
 }

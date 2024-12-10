@@ -38,17 +38,16 @@ namespace BoxServer.Controllers
         /// <summary>
         /// Delete an existing box
         /// </summary>
-        /// <param name="clientId"></param>
         /// <param name="id">Id</param>
         /// <response code="400">Invalid ID supplied</response>
         /// <response code="404">Box not found</response>
         /// <response code="405">Validation exception</response>
         [HttpDelete]
-        [Route("/api/v1/{clientId}/box/{id:guid}")]
+        [Route("/api/v1/box/{id:guid}")]
         [SwaggerOperation("DeleteBox")]
-        public async Task<IActionResult> DeleteBox([FromRoute][Required] string clientId, [FromRoute][Required] Guid id)
+        public async Task<IActionResult> DeleteBox([FromRoute][Required] Guid id)
         {
-            var result = await _boxRepository.DeleteBox(clientId, id).ConfigureAwait(false);
+            var result = await _boxRepository.DeleteBox(id).ConfigureAwait(false);
             return Ok(result);
         }
 
@@ -57,34 +56,33 @@ namespace BoxServer.Controllers
         /// </summary>
         /// <response code="200">successful operation</response>
         [HttpGet]
-        [Route("/api/v1/{clientId}/box")]
-        [SwaggerOperation("GetBoxs")]
+        [Route("/api/v1/box")]
+        [SwaggerOperation("GetBoxes")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Box>), description: "successful operation")]
-        public async Task<ActionResult<List<Box>>> GetBox([FromRoute] [Required] string clientId)
+        public async Task<ActionResult<List<Box>>> GetBox()
         {
-            var allBoxs = (await _boxRepository.GetBoxs(clientId).ConfigureAwait(false))?.ToList();
-            if (!allBoxs?.Any() ?? false)
+            var allBoxes = (await _boxRepository.GetBoxes().ConfigureAwait(false))?.ToList();
+            if (!allBoxes?.Any() ?? false)
             {
                 return NotFound();
             }
-            return Ok(allBoxs);
+            return Ok(allBoxes);
         }
 
         /// <summary>
         /// Get a box by Id
         /// </summary>
         /// <param name="id">Id</param>
-        /// <param name="clientId"></param>
         /// <response code="200">successful operation</response>
         /// <response code="400">Invalid ID supplied</response>
         /// <response code="405">Validation exception</response>
         [HttpGet]
-        [Route("/api/v1/{clientId}/box/{id:guid}")]
+        [Route("/api/v1/box/{id:guid}")]
         [SwaggerOperation("GetBox")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Box>), description: "successful operation")]
-        public async Task<ActionResult<Box>> GetBox([FromRoute][Required] Guid id, [FromRoute][Required] string clientId)
+        public async Task<ActionResult<Box>> GetBox([FromRoute][Required] Guid id)
         {
-            var ret = await _boxRepository.GetBox(clientId, id).ConfigureAwait(false);
+            var ret = await _boxRepository.GetBox(id).ConfigureAwait(false);
             if (ret == null)
             {
                 return NotFound();
@@ -96,40 +94,38 @@ namespace BoxServer.Controllers
         /// Create a new box
         /// </summary>
         /// <param name="box">Box object that needs to be added</param>
-        /// <param name="clientId"></param>
         /// <response code="400">Invalid ID supplied</response>
         /// <response code="405">Validation exception</response>
         [HttpPost]
-        [Route("/api/v1/{clientId}/box")]
+        [Route("/api/v1/box")]
         [SwaggerOperation("NewBox")]
-        public async Task<ActionResult<Box>> NewBox([FromBody] Box box, [FromRoute][Required] string clientId)
+        public async Task<ActionResult<Box?>> NewBox([FromBody] Box box)
         {
             if (box.BoxId is not null && box.BoxId != Guid.Empty)
             {
                 return BadRequest("Must not have id on new");
             }
 
-            return await _boxRepository.AddBox(clientId, box).ConfigureAwait(false);
+            return await _boxRepository.AddBox(box).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Update an existing box to create a new version
         /// </summary>
         /// <param name="box">Box object that needs to be updated</param>
-        /// <param name="clientId"></param>
         /// <response code="400">Invalid ID supplied</response>
         /// <response code="404">Box not found</response>
         /// <response code="405">Validation exception</response>
         [HttpPut]
-        [Route("/api/v1/{clientId}/box")]
+        [Route("/api/v1/box")]
         [SwaggerOperation("UpdateBox")]
-        public async Task<ActionResult<Box?>> UpdateBox([FromBody] Box box, [FromRoute][Required] string clientId)
+        public async Task<ActionResult<Box?>> UpdateBox([FromBody] Box box)
         {
             if (box.BoxId == Guid.Empty)
             {
                 return BadRequest("Must have id on update");
             }
-            return await _boxRepository.UpdateBox(clientId, box).ConfigureAwait(false);
+            return await _boxRepository.UpdateBox(box).ConfigureAwait(false);
         }
     }
 }

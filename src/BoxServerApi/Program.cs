@@ -2,15 +2,11 @@ using System.Text.RegularExpressions;
 using Azure.Extensions.AspNetCore.Configuration.Secrets;
 using BoxServer;
 using BoxServer.Extensions;
-using Loyal.Core.Authentication;
-using Loyal.Core.Exceptions;
-using Loyal.Core.Extensions;
-using Loyal.Core.HealthChecks.Extensions;
 using Seekatar.Tools;
 using Serilog;
+using Serilog.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen; // for key vault
-using Loyal.Core.Telemetry;
 
 // configured in the values.yaml ingress
 // hostname: boxserverapi-#{environment}#-#{availabilityZoneLower}#.loyalhealth.internal
@@ -51,14 +47,10 @@ if (vaultConfig?.Enabled ?? false)
 
 builder.AddOptions();
 builder.AddDependentServices("BoxServer");
-builder.TryUseLocalSsl();
-builder.Services.AddTelemetry(builder.Configuration);
 // end added
 
 builder.Services.AddControllers(options =>
     {
-        options.Filters.Add<LoggingContextFilter>();
-        options.Filters.Add<ProblemDetailsExceptionFilter>();
     })
     .AddJsonOptions(CustomSerializerApiOptions.SetOptions);
 
@@ -73,7 +65,7 @@ app.AddExceptionHandling();
 
 app.UseSwagger(config =>
 {
-    // Loyal uses /docs for swagger
+    // use /docs for swagger
     config.RouteTemplate = "docs/{documentName}/docs.json";
 
     // add a server to the OAS doc to be accurate when deployed
@@ -81,12 +73,11 @@ app.UseSwagger(config =>
     {
         var environment = "dev";
 
-        // get host as configured in ingress: boxserverapi-test-sc.loyalhealth.internal
+        // get host as configured in ingress
         var matches =  hostRegex.Matches(httpReq.Host.Value ?? "");
         if (matches.Count > 0)
             environment = matches[0].Groups["environment"].Value;
 
-        // want https://api-dev.loyalhealth.com/box
         var externalUrl = $"{httpReq.Scheme}://api-{environment}.loyalhealth.com/box";
         var internalUrl = $"{httpReq.Scheme}://boxserverapi-{environment}-sc.loyalhealth.internal";
         var localhost = $"{httpReq.Scheme}://localhost:{httpReq.Host.Port}";
@@ -110,8 +101,6 @@ app.UseSwaggerUI(config =>
 
 app.UseHttpsRedirection();
 
-app.UseLoyalHealthCheckAuthorization();
-
 app.UseRouting();
 
 app.UseCors(ServiceExtensions.CorsPolicyName);
@@ -121,7 +110,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapLoyalHealthChecks();
 
 app.Run();
 

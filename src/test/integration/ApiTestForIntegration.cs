@@ -1,6 +1,4 @@
 using BoxServer;
-using Loyal.Core.Authentication;
-using Loyal.Core.Test;
 using Microsoft.Extensions.Configuration;
 using Seekatar.Tools;
 using Xunit.Abstractions;

@@ -1,7 +1,5 @@
 using BoxServer;
 using BoxServer.Interfaces;
-using Loyal.Core.Authentication;
-using Loyal.Core.Test;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
