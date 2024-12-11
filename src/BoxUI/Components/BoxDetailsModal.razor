@@ -1,0 +1,41 @@
+@inject IJSRuntime JSRuntime
+
+<div class="modal" tabindex="-1" style="display:@(IsVisible ? "block" : "none")">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Box Details</h5>
+                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>ID:</strong> @Box.BoxId</p>
+                <p><strong>Name:</strong> @Box.Name</p>
+                <p><strong>Description:</strong> @Box.Description</p>
+                <p><strong>Active:</strong> @Box.Active</p>
+                <p><strong>Created On:</strong> @Box.CreatedOn.ToShortDateString()</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public BoxServer.Models.Box Box { get; set; }
+
+    public bool IsVisible { get; private set; }
+
+    public void ShowModal()
+    {
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+}

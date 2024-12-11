@@ -41,8 +41,12 @@ else
     </table>
 }
 
+<BoxDetailsModal @ref="boxDetailsModal" Box="selectedBox" />
+
 @code {
     private BoxServer.Models.Box[]? boxes;
+    private BoxServer.Models.Box selectedBox = new();
+    private BoxDetailsModal? boxDetailsModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,8 +55,7 @@ else
 
     private async Task ShowBoxDetails(BoxServer.Models.Box box)
     {
-        box = await BoxService.GetBox(box.BoxId!.Value);
-        var boxDetails = $"ID: {box.BoxId}\nName: {box.Name}\nDescription: {box.Description}\nActive: {box.Active}\nCreated On: {box.CreatedOn.ToShortDateString()}";
-        await JSRuntime.InvokeVoidAsync("alert", boxDetails);
+        selectedBox = await BoxService.GetBox(box.BoxId!.Value);
+        boxDetailsModal!.ShowModal();
     }
 }
