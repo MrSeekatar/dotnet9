@@ -11,6 +11,9 @@ internal interface IBoxService
     [Get("/box/{boxId}")]
     Task<Box> GetBox(int boxId);
 
+    [Delete("/box/{boxId}")]
+    Task DeleteBox(int boxId);
+
     [Post("/box")]
     Task AddBox([Body]Box newBox);
 }

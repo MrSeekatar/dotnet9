@@ -13,18 +13,19 @@
                 <EditForm Model="newBox" OnValidSubmit="HandleValidSubmit">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-
-                    <div>
-                        <label>Name:</label>
-                        <InputText @bind-Value="newBox.Name" />
-                    </div>
-                    <div>
-                        <label>Description:</label>
-                        <InputText @bind-Value="newBox.Description" />
-                    </div>
-                    <div>
-                        <label>Active:</label>
-                        <InputCheckbox @bind-Value="newBox.Active" />
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Name:</label>
+                            <InputText @bind-Value="newBox.Name" class="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Description:</label>
+                            <InputText @bind-Value="newBox.Description" class="form-control"/>
+                        </div>
+                        <div class="form-group">
+                            <label>Active:</label>
+                            <InputCheckbox @bind-Value="newBox.Active"/>
+                        </div>
                     </div>
                     <button type="submit">Add Box</button>
                 </EditForm>

@@ -12,7 +12,7 @@
 
 <p>Here are some boxes.</p>
 
-<button @onclick="ShowAddBoxModal">Add New Box</button>
+<button @onclick="ShowAddBoxModal"><i class="fas fa-plus"></i></button>
 
 @if (boxes == null)
 {
@@ -35,7 +35,8 @@ else
             <tr>
                 <td>@box.Name</td>
                 <td>
-                <button @onclick="() => ShowBoxDetails(box)">Show Details</button>
+                <button @onclick="() => ShowBoxDetails(box)"><i class="fas fa-pencil-alt"></i></button>
+                <button @onclick="() => DeleteBox(box)"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         }
@@ -67,6 +68,16 @@ else
     private void ShowAddBoxModal()
     {
         addBoxModal!.ShowModal();
+    }
+
+    private async Task DeleteBox(BoxServer.Models.Box box)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete the box '{box.Name}'?");
+        if (confirmed)
+        {
+            await BoxService.DeleteBox(box.BoxId!.Value);
+            await OnInitializedAsync();
+        }
     }
 
     private async Task OnBoxAdded(BoxServer.Models.Box newBox)
