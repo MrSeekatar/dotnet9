@@ -1,8 +1,11 @@
-﻿@page "/box"
+﻿@rendermode InteractiveServer
+@page "/box"
 @using BoxUI.Services
 @using Microsoft.AspNetCore.Server.Kestrel.Transport.Quic
 @attribute [StreamRendering]
 @inject IBoxService BoxService
+@inject IJSRuntime JSRuntime
+
 <PageTitle>Box</PageTitle>
 
 <h1>Box</h1>
@@ -20,20 +23,18 @@ else
     <table class="table">
         <thead>
         <tr>
-            <th>CreateOn</th>
             <th>Name</th>
-            <th>Description</th>
-            <th>Active</th>
+            <th>Action</th>
         </tr>
         </thead>
         <tbody>
         @foreach (var box in boxes)
         {
             <tr>
-                <td>@box.CreatedOn.ToShortDateString()</td>
                 <td>@box.Name</td>
-                <td>@box.Description</td>
-                <td>@box.Active</td>
+                <td>
+                <button @onclick="() => ShowBoxDetails(box)">Show Details</button>
+                </td>
             </tr>
         }
         </tbody>
@@ -41,10 +42,17 @@ else
 }
 
 @code {
-    private Models.Box[]? boxes;
+    private BoxServer.Models.Box[]? boxes;
 
     protected override async Task OnInitializedAsync()
     {
         boxes = (await BoxService.GetBoxes()).ToArray();
+    }
+
+    private async Task ShowBoxDetails(BoxServer.Models.Box box)
+    {
+        box = await BoxService.GetBox(box.BoxId!.Value);
+        var boxDetails = $"ID: {box.BoxId}\nName: {box.Name}\nDescription: {box.Description}\nActive: {box.Active}\nCreated On: {box.CreatedOn.ToShortDateString()}";
+        await JSRuntime.InvokeVoidAsync("alert", boxDetails);
     }
 }

@@ -9,7 +9,7 @@ namespace BoxServer.Repositories;
 
 public class BoxRepository : IBoxRepository
 {
-    private readonly ConcurrentDictionary<Guid, Box> _boxes = new();
+    private readonly ConcurrentDictionary<int, Box> _boxes = new();
     private ILogger<BoxRepository> logger;
 
     public BoxRepository(ILogger<BoxRepository> _logger)
@@ -19,23 +19,24 @@ public class BoxRepository : IBoxRepository
         {
             Box box = new()
             {
-                BoxId = NewId.NextGuid(),
+                BoxId = _boxes.Count,
                 Name = $"Box {i}",
                 Description = $"Description {i}",
-                CreatedOn = DateTime.UtcNow - TimeSpan.FromDays(i)
+                CreatedOn = DateTime.UtcNow - TimeSpan.FromDays(i),
+                Active = true
             };
             _boxes.TryAdd(box.BoxId.Value, box);
         }
     }
 
-    public async Task<bool> DeleteBox(Guid id)
+    public async Task<bool> DeleteBox(int id)
     {
         await Task.CompletedTask;
         _boxes.TryRemove(id, out _);
         return true;
     }
 
-    public async Task<Box?> GetBox(Guid id)
+    public async Task<Box?> GetBox(int id)
     {
         await Task.CompletedTask;
         Box? ret = _boxes.GetValueOrDefault(id);
@@ -55,7 +56,7 @@ public class BoxRepository : IBoxRepository
         await Task.CompletedTask;
         Guard.IsNotNull(box);
 
-        box.BoxId = NewId.NextGuid();
+        box.BoxId = _boxes.Count;
         box.CreatedOn = DateTime.UtcNow;
 
         return _boxes.TryAdd(box.BoxId.Value, box) ? box : null;

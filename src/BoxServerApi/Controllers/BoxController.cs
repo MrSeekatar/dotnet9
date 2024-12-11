@@ -43,9 +43,9 @@ namespace BoxServer.Controllers
         /// <response code="404">Box not found</response>
         /// <response code="405">Validation exception</response>
         [HttpDelete]
-        [Route("/api/v1/box/{id:guid}")]
+        [Route("/api/v1/box/{id:int}")]
         [SwaggerOperation("DeleteBox")]
-        public async Task<IActionResult> DeleteBox([FromRoute][Required] Guid id)
+        public async Task<IActionResult> DeleteBox([FromRoute][Required] int id)
         {
             var result = await _boxRepository.DeleteBox(id).ConfigureAwait(false);
             return Ok(result);
@@ -77,10 +77,10 @@ namespace BoxServer.Controllers
         /// <response code="400">Invalid ID supplied</response>
         /// <response code="405">Validation exception</response>
         [HttpGet]
-        [Route("/api/v1/box/{id:guid}")]
+        [Route("/api/v1/box/{id:int}")]
         [SwaggerOperation("GetBox")]
         [SwaggerResponse(statusCode: 200, type: typeof(List<Box>), description: "successful operation")]
-        public async Task<ActionResult<Box>> GetBox([FromRoute][Required] Guid id)
+        public async Task<ActionResult<Box>> GetBox([FromRoute][Required] int id)
         {
             var ret = await _boxRepository.GetBox(id).ConfigureAwait(false);
             if (ret == null)
@@ -101,7 +101,7 @@ namespace BoxServer.Controllers
         [SwaggerOperation("NewBox")]
         public async Task<ActionResult<Box?>> NewBox([FromBody] Box box)
         {
-            if (box.BoxId is not null && box.BoxId != Guid.Empty)
+            if (box.BoxId is not null && box.BoxId != 0)
             {
                 return BadRequest("Must not have id on new");
             }
@@ -121,7 +121,7 @@ namespace BoxServer.Controllers
         [SwaggerOperation("UpdateBox")]
         public async Task<ActionResult<Box?>> UpdateBox([FromBody] Box box)
         {
-            if (box.BoxId == Guid.Empty)
+            if (box.BoxId == 0)
             {
                 return BadRequest("Must have id on update");
             }

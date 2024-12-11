@@ -8,6 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+var url = builder.Configuration.GetValue<string>("BoxServerUrl");
+if (string.IsNullOrEmpty(url))
+{
+    throw new InvalidOperationException("BoxServerUrl is required");
+}
+
 var settings = new RefitSettings
 {
     ContentSerializer = new NewtonsoftJsonContentSerializer()
@@ -15,7 +21,7 @@ var settings = new RefitSettings
 
 builder.Services.AddRefitClient<IBoxService>(settings).ConfigureHttpClient(c =>
 {
-    c.BaseAddress = new Uri("http://localhost:5000/api/v1");
+    c.BaseAddress = new Uri(url);
 });
 
 var app = builder.Build();
