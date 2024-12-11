@@ -1,10 +1,6 @@
 ﻿<Solution>
-  <!-- <Folder Name="/test-integration/">
-    <Project Path="test\integration\integration.csproj" />
-  </Folder>
-  <Folder Name="/test-unit/">
-    <Project Path="test\unit\unit.csproj" />
-  </Folder> -->
+  <Project Path="Box.AppHost\Box.AppHost.csproj" Type="Classic C#" />
+  <Project Path="Box.ServiceDefaults\Box.ServiceDefaults.csproj" Type="Classic C#" />
   <Project Path="BoxServerApi\BoxServerApi.csproj" />
   <Project Path="BoxServerModels\BoxServerModels.csproj" />
   <Project Path="BoxServer\BoxServer.csproj" />

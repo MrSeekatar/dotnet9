@@ -14,6 +14,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BoxServerModels\BoxServerModels.csproj" />
+      <ProjectReference Include="..\Box.ServiceDefaults\Box.ServiceDefaults.csproj" />
     </ItemGroup>
 
 </Project>

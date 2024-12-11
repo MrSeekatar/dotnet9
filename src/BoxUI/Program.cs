@@ -3,6 +3,7 @@ using BoxUI.Services;
 using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -13,6 +13,7 @@ using Swashbuckle.AspNetCore.SwaggerGen; // for key vault
 Regex hostRegex = new(@"-(?<environment>\w+)-\w+\.loyalhealth\.internal$", RegexOptions.Compiled);
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Host.UseSerilog((ctx, loggerConfig) => loggerConfig.ReadFrom.Configuration(builder.Configuration));
 builder.Configuration.AddSharedDevSettings();
@@ -78,13 +79,9 @@ app.UseSwagger(config =>
         if (matches.Count > 0)
             environment = matches[0].Groups["environment"].Value;
 
-        var externalUrl = $"{httpReq.Scheme}://api-{environment}.loyalhealth.com/box";
-        var internalUrl = $"{httpReq.Scheme}://boxserverapi-{environment}-sc.loyalhealth.internal";
         var localhost = $"{httpReq.Scheme}://localhost:{httpReq.Host.Port}";
         swagger.Servers = new List<OpenApiServer>
         {
-            new() { Url = internalUrl },
-            new() { Url = externalUrl },
             new() { Url = localhost },
         };
     });
