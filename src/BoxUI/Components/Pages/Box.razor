@@ -10,7 +10,9 @@
 
 <h1>Box</h1>
 
-<p>This component demonstrates showing data.</p>
+<p>Here are some boxes.</p>
+
+<button @onclick="ShowAddBoxModal">Add New Box</button>
 
 @if (boxes == null)
 {
@@ -41,12 +43,15 @@ else
     </table>
 }
 
+<AddBoxModal @ref="addBoxModal" OnBoxAdded="OnBoxAdded" />
+
 <BoxDetailsModal @ref="boxDetailsModal" Box="selectedBox" />
 
 @code {
     private BoxServer.Models.Box[]? boxes;
     private BoxServer.Models.Box selectedBox = new();
     private BoxDetailsModal? boxDetailsModal;
+    private AddBoxModal? addBoxModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,5 +62,15 @@ else
     {
         selectedBox = await BoxService.GetBox(box.BoxId!.Value);
         boxDetailsModal!.ShowModal();
+    }
+
+    private void ShowAddBoxModal()
+    {
+        addBoxModal!.ShowModal();
+    }
+
+    private async Task OnBoxAdded(BoxServer.Models.Box newBox)
+    {
+        boxes = (await BoxService.GetBoxes()).ToArray();
     }
 }

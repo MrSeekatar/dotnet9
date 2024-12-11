@@ -78,7 +78,7 @@ namespace BoxServer.Models
 
         [DataMember(Name="active")]
         [JsonPropertyName("active")]
-        public bool? Active { get; set; }
+        public bool Active { get; set; }
 
         /// <summary>
         /// Returns the JSON string presentation of the object

@@ -10,4 +10,7 @@ internal interface IBoxService
 
     [Get("/box/{boxId}")]
     Task<Box> GetBox(int boxId);
+
+    [Post("/box")]
+    Task AddBox([Body]Box newBox);
 }
