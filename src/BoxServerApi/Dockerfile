@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0.0-noble-chiseled AS base
 USER $APP_UID
 WORKDIR /app
 
@@ -16,7 +16,6 @@ WORKDIR "/src/BoxServerApi"
 RUN dotnet publish "BoxServerApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM base AS final
-COPY --from=build src/cert.pfx /app/cert.pfx
 
 ENV ASPNETCORE_URLS="https://*:44300"
 
@@ -24,4 +23,6 @@ EXPOSE 44300
 
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY aspnetapp.pfx .
+
 ENTRYPOINT ["dotnet", "BoxServerApi.dll"]

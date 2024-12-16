@@ -131,14 +131,14 @@ foreach ($currentTask in $Tasks) {
                     dotnet build
                 }
             }
-            'run' {
-                executeSB -RelativeDir "src/${appName}Api" {
-                    dotnet run
-                }
-            }
             'watch' {
                 executeSB -RelativeDir "src/${appName}Api" {
                     dotnet watch
+                }
+            }
+            'runApi' {
+                executeSB -RelativeDir "src/${appName}Api" {
+                    dotnet run
                 }
             }
             'runApiDocker' {
@@ -146,22 +146,22 @@ foreach ($currentTask in $Tasks) {
                     Write-Warning "No certificate password provided. Use -CertPassword"
                     exit
                 }
-                if (!(Test-Path ${HOME}/.aspnet/https/aspnetapp.pfx)) {
-                    Write-Warning "No certificate found at ${HOME}/.aspnet/https/aspnetapp.pfx. Create with: "
-                    Write-Warning "  dotnet dev-certs https -ep `${HOME}/.aspnet/https/aspnetapp.pfx -p `$env:cert_password"
-                    Write-Warning "  dotnet dev-certs https --trust"
-                    Write-Warning "The password must be the same one you pass in as -CertPassword"
-                    exit
-                }
-                # run docker with the dev cert
                 docker run --rm -p ${TestPort}:44300 `
                                 -e ASPNETCORE_Kestrel__Certificates__Default__Password="$certPassword" `
-                                -e ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx `
-                                -v ${HOME}/.aspnet/https:/https/ `
+                                -e ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx `
                                 $imageName
             }
             "buildApiDocker" {
+                if (!(Test-Path (Join-Path $PSScriptRoot src/aspnetapp.pfx))) {
+                    Write-Warning "No certificate found at src/aspnetapp.pfx. Create with: "
+                    Write-Warning "  dotnet dev-certs https -ep aspnetapp.pfx -p `$env:cert_password"
+                    Write-Warning "  dotnet dev-certs https --trust"
+                    Write-Warning "The password must be the same one you pass in as -CertPassword"
+                    Write-Warning "On Mac and Linux chmod 0644 aspnetapp.pfx"
+                    exit
+                }
                 buildDocker -file "BoxServerApi/Dockerfile" -imageName $imageName
+                docker tag box-api:latest loyal.azurecr.io/box-api:latest # for testing with helm since Loyal's chart uses this
             }
             default {
                 Write-Warning "Unknown task $currentTask"
