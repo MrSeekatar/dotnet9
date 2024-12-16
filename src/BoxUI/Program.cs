@@ -41,7 +41,8 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.MapStaticAssets();
+app.MapStaticAssets(); // ASP.NET 9
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

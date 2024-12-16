@@ -357,3 +357,4 @@ wwwroot/
 *.user
 *.userosscache
 *.sln.docstates
+DevOps/boxserver-api/values-replaced.yaml

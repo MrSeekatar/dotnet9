@@ -7,8 +7,6 @@ namespace ApiTest;
 
 public partial class ApiTests : XUnitHttpClientTestBase<ApiTests>
 {
-    // if you don't use 44300 port, you can change it here with an environment variable
-    // ApiTests__URIPREFIX='https://localhost:44673'
     public ApiTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
     {
         DefaultSerializationOptions = CustomSerializerOptions.Options;

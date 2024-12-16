@@ -1,93 +1,79 @@
-# BoxServer API Project <!-- omit in toc -->
+# .NET 9 Playground <!-- omit in toc -->
+
+- [Aspire](#aspire)
+- [.NET 9 and C# 13 Features Explored](#net-9-and-c-13-features-explored)
+- [API Endpoints](#api-endpoints)
+  - [GET /weatherforecast](#get-weatherforecast)
+  - [/api.html](#apihtml)
+  - [/scalar/v1](#scalarv1)
+- [Links](#links)
+
+> .NET 9 playground is [here](https://github.com/seekatar/dotnet9)
+> .NET 7 playground is [here](https://github.com/seekatar/dotnet7)
 
 This is the repo for the BoxServer project. It was generated initially by the Loyal dotnet template, then adapted to show off .NET 9 and Aspire
 
-## Running the API
+This repo explores some of the more interesting .NET 9 and C# 13 features. It was originally created with this command after installing the .NET 9 SDK in a GitHub Codespaces container.
 
-### Required Environment Variables
+## Aspire
 
-This app uses `IConfiguration` so these values may be in appsettings, shared.appsettings, environment variables, etc. Here is a sample `shared.appsettings.Development.json` file with the minimum values required that you can fill out and put in your "code" directory (be sure not to commit it!)
+[Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) is an orchestrator to run multiple apps locally automatically connecting them together, and adding tons of observability with its own console. It uses containers to do all this magic, so does require Docker Desktop, or some other Docker runtime to be installed locally. It's kinda like Docker Compose on steroids.
 
-```json
-{
+The main reason I wanted to play with Aspire was to see how to integrate it with existing backend apps. The high level steps I followed were:
 
-}
-```
+1. Create a new backend API using my own dotnet template. For lack of a better name I called it the Box server. (I'd already used Widget and Thingy in other projects)
+1. Add a Blazor front end using `dotnet new blazor`
+    1. And added a new page for calling the Box API CRUD endpoints.
+1. Install Aspire
+1. Followed the [tutorial](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/add-aspire-existing-app?tabs=unix&pivots=dotnet-cli) to add Aspire to the existing apps
+    - `dotnet new aspire-apphost -o Box.AppHost`
+        - update tfm to 9
+        - add to solution
+    - Add UI and API as project refs to AppHost so can launch them
+        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxUI/BoxUI.csproj`
+        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxServerApi/BoxServerApi.csproj`
+    - dotnet new aspire-servicedefaults -o Box.ServiceDefaults
+        - update tfm to 9
+        - add to solution
+    - add ServiceDefaults ref to both API and UI so can play in Aspire
+        - `dotnet add ./BoxUI/BoxUI.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
+        - `dotnet add ./BoxServerApi/BoxServerApi.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
+    - add `builder.AddServiceDefaults();` after `CreateBuilder()` in UI and API
+    - Suppress `CS1591` in the API since generated code doesn't add XML comments
+    - Edit [Box.AppHost/Program.cs](src/Box.AppHost/Program.cs) to add the API, and UI the refers to the API
 
-### Endpoints
+At this point I could do `dotnet run` from `src/Box.AppHost` and it will launch its console, the API and the UI. From the console you can see status, messages, logs, and metrics. (Note trying to launch from Rider gave me an error `Unable to get the project output for net8.0` )
 
-These are the endpoints that are available when running this API:
+I also wanted to see how, if at all, this affected running the API in K8s, since that is the typical deployment environment.
 
-| Endpoint                                   | Description                                                                                |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| https://localhost:44300/api/health/        | Minimal health check, auth required                                                        |
-| https://localhost:44300/api/health/details | Health check with details, auth required                                                   |
-| https://localhost:44300/api/v1/*           | Base Url for API calls, see the [tests](src/test/integration/ApiTest.cs) for example calls |
-| https://localhost:44300/docs/index.html    | Swagger endpoint                                                                           |
-| https://localhost:44300/warmup             | Returns 200 if running                                                                     |
+## .NET 9 and C# 13 Features Explored
 
-### Using run.ps1
+- slnx files greatly simply sln files. Still a preview feature and no official doc yet, but lots of blog posts. Rider and VS support it.
+  - [dotnet9.slnx](src/dotnet9.slnx)
+- [Static Delivery Optimization]([doclink](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-8.0#static-asset-delivery-optimization)) (doc) adds compression and better caching headers to help browsers.
+  - [src/BoxUI/Program.cs](src/BoxUI/Program.cs#L44)
+- [Generate OpenAPI documents](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-9.0&tabs=visual-studio) replaces SwaggerGen to generate the OpenAPI document at runtime (or buildtime). You can then plug in your own UI such as SwaggerGen. I added Elements and Scalar.
+  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs#L31)
+  - [src/BoxServerApi/wwwroot/api.html](src/BoxServerApi/wwwroot/api.html) for Elements
+- SignalR has some enhancements, like polymorphic serialization I didn't use them here.
+-
 
-This helper PowerShell script has the following commands, which are wrappers around other commands with all their parameters nicely filled out for you. You can run multiple comma-separated tasks. Use tab-completion to see the options and parameters.
-<!-- Get-Content ./run.ps1 | Where-Object { $_ -match "^\s+'([\w+-]+)' {" } -->
-| Task            | Description                                                              |
-| --------------- | ------------------------------------------------------------------------ |
-| build           | Builds the project                                                       |
-| testUnit        | Runs unit tests                                                          |
-| testIntegration | Runs integration tests. The API must be running (see run)                |
-| run             | Runs the API synchronously                                               |
-| buildDocker     | Builds the docker image                                                  |
-| runDocker       | Runs the API in a docker container synchronously, call buildDocker first |
-| buildPerses     | Builds the Perses Docker image                                           |
-| generate        | Generates the API code from the ./doc/openapi.yaml file                  |
-| updateDb        | Runs Perses to update the database schema                                |
-| bootstrapDb     | Runs Perses to seed the database                                         |
+## API Endpoints
 
-## Tour of the Repo
+### GET /weatherforecast
 
-<!-- tree -P *.csproj  -I bin -I obj -P *.ps1 -P *.y* -->
-```text
-.
-├── DevOps
-│   ├── boxserver-api
-│   │   ├── build.yml                               # AzDO Pipeline Yaml for Build
-│   │   ├── deploy.yml                              # AzDO Pipeline Yaml for Deployment
-│   │   ├── integration-test-steps.yml              # AzDO Pipeline Yaml for Integration test
-│   │   ├── values.yaml                             # Helm values file for use in Helm Chart
-│   │   └── variables                               # Variable files used in build and deploy yaml
-│   │       ├── variables-common.yml
-│   │       ├── variables-dev.yml
-│   │       ├── variables-development.yml
-│   │       ├── variables-preprod.yml
-│   │       ├── variables-prod.yml
-│   │       └── variables-test.yml
-│   └── boxserver-models
-│       └── build.yml                               # AzDO Pipeline Yaml for Building NuGet package
-├── Scripts                                         # SQL Scripts
-│   ├── BoxServer                                    # Perses scripts added to pipeline are artifact for deploy
-│   │   └── client
-│   ├── int-test-bootstrap                          # integration test bootstrap data
-│   │   └── client
-│   └── util                                        # helper scripts used by developers
-├── doc
-│   └── OAS
-│       └── openapi.yaml                            # OAS file for generating controllers and models
-├── run.ps1                                         # helper for running local tasks, like builds, Perses, deploys, etc.
-└── src
-    ├── BoxServer                                    # Core of the application
-    │   ├── BoxServer.csproj
-    │   ├── Interfaces
-    │   └── Repositories
-    ├── BoxServerApi                                 # ASP.NET API
-    │   ├── BoxServerApi.csproj
-    │   ├── Controllers
-    │   └── Properties
-    ├── BoxServerModels                              # Models, mostly generated, could be NuGet for use by other projects
-    │   ├── BoxServerModels.csproj
-    │   └── ModelsGenerated
-    └── test                                        # XUnit tests
-        ├── integration                             # integration tests run in integration test pipeline against running app
-        │   └── integration.csproj
-        └── unit                                    # Unit tests run in build container
-            └── unit.csproj
-```
+Classic example from the template, with default parameters for the lambda.
+
+### /api.html
+
+A Swagger UI replacement using [Elements](https://github.com/stoplightio/elements)
+
+### /scalar/v1
+
+A Swagger UI replacement using [Scalar](https://github.com/scalar/scalar)
+
+## Links
+
+- [What's new in ASP.NET Core 9.0](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0)
+- [NET Aspire overview](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
+- [Rider: Support for SLNX Solution Files](https://blog.jetbrains.com/dotnet/2024/10/04/support-for-slnx-solution-files/)
