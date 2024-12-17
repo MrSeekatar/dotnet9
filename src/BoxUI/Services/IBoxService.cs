@@ -3,6 +3,7 @@ using Refit;
 
 namespace BoxUI.Services;
 
+// service interface for the Box service. Refit will generate the implementation
 internal interface IBoxService
 {
     [Get("/box")]

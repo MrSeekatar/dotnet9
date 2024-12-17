@@ -1,3 +1,4 @@
+using System.Configuration;
 using BoxServer;
 using BoxServer.Extensions;
 using Seekatar.Tools;
@@ -57,5 +58,27 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapStaticAssets(); // ASP.NET 9
+
+var client = app.MapGroup("/")
+    .WithOpenApi()
+    .WithTags("Box");
+
+client.MapGet("/", (HttpContext context) =>
+{
+    var request = context.Request;
+    var apiUrl = $"{request.Scheme}://{request.Host}{request.PathBase}/api.html";
+    var scalarUrl = $"{request.Scheme}://{request.Host}{request.PathBase}/scalar/v1";
+    var html = $@"
+        <html>
+            <body>
+                <ul>
+                    <li><a href='{apiUrl}'>Elements API Documentation</a></li>
+                    <li><a href='{scalarUrl}'>Scalar API Documentation</a></li>
+                </ul>
+            </body>
+        </html>";
+    return Results.Content(html, "text/html");
+});
+
 
 app.Run();

@@ -163,6 +163,11 @@ foreach ($currentTask in $Tasks) {
                 buildDocker -file "BoxServerApi/Dockerfile" -imageName $imageName
                 docker tag box-api:latest loyal.azurecr.io/box-api:latest # for testing with helm since Loyal's chart uses this
             }
+            "runAppHost" {
+                executeSB -RelativeDir "src/Box.AppHost" {
+                    dotnet run
+                }
+            }
             default {
                 Write-Warning "Unknown task $currentTask"
             }
