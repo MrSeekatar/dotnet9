@@ -10,8 +10,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
+using BoxServer.Hubs;
 using BoxServer.Models;
 using BoxServer.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BoxServer.Controllers
 {
@@ -22,6 +24,7 @@ namespace BoxServer.Controllers
     public class BoxController : ControllerBase
     {
         private readonly IBoxRepository _boxRepository;
+        private readonly IHubContext<MessageHub> _messageHub;
         private readonly ILogger<BoxController> _logger;
 
         /// <summary>
@@ -29,10 +32,12 @@ namespace BoxServer.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="boxRepository"></param>
-        public BoxController(ILogger<BoxController> logger, IBoxRepository boxRepository)
+        /// <param name="messageHub"></param>
+        public BoxController(ILogger<BoxController> logger, IBoxRepository boxRepository, IHubContext<MessageHub> messageHub)
         {
             _logger = logger;
             _boxRepository = boxRepository;
+            _messageHub = messageHub;
         }
 
         /// <summary>
@@ -47,6 +52,7 @@ namespace BoxServer.Controllers
         [SwaggerOperation("DeleteBox")]
         public async Task<IActionResult> DeleteBox([FromRoute][Required] int id)
         {
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = $"Deleting box with id {id}" });
             var result = await _boxRepository.DeleteBox(id).ConfigureAwait(false);
             return Ok(result);
         }
@@ -66,6 +72,7 @@ namespace BoxServer.Controllers
             {
                 return NotFound();
             }
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = "Getting all boxes" });
             return Ok(allBoxes);
         }
 
@@ -87,6 +94,7 @@ namespace BoxServer.Controllers
             {
                 return NotFound();
             }
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = $"Getting box {id}" });
             return Ok(ret);
         }
 
@@ -105,6 +113,7 @@ namespace BoxServer.Controllers
             {
                 return BadRequest("Must not have id on new");
             }
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = $"Adding box {box.Name}" });
 
             return await _boxRepository.AddBox(box).ConfigureAwait(false);
         }
@@ -125,6 +134,7 @@ namespace BoxServer.Controllers
             {
                 return BadRequest("Must have id on update");
             }
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = $"Updating box {box.BoxId}" });
             return await _boxRepository.UpdateBox(box).ConfigureAwait(false);
         }
     }

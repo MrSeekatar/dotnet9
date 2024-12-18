@@ -50,4 +50,8 @@
     <ProjectReference Include="..\BoxServer\BoxServer.csproj" />
     <ProjectReference Include="..\Box.ServiceDefaults\Box.ServiceDefaults.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Hubs\" />
+  </ItemGroup>
 </Project>

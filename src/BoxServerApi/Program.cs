@@ -7,6 +7,7 @@ using Serilog.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using BoxServer.Hubs;
 using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
 
@@ -33,6 +34,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi("v1"); // ASP.NET 9
 
 builder.Services.AddHybridCache();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -88,5 +91,6 @@ client.MapGet("/", (HttpContext context) =>
     return Results.Content(html, "text/html");
 });
 
+app.MapHub<MessageHub>("/messageHub");
 
 app.Run();
