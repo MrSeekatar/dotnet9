@@ -4,18 +4,21 @@ using BoxServer.Interfaces;
 using BoxServer.Models;
 using Microsoft.Extensions.Logging;
 using MassTransit;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace BoxServer.Repositories;
 
 public class BoxRepository : IBoxRepository
 {
     private readonly ConcurrentDictionary<int, Box> _boxes = new();
-    private ILogger<BoxRepository> logger;
+    private readonly HybridCache _cache;
+    private readonly ILogger<BoxRepository> _logger;
 
-    public BoxRepository(ILogger<BoxRepository> _logger)
+    public BoxRepository(HybridCache cache, ILogger<BoxRepository> logger)
     {
-        logger = _logger;
-        for (int i = 0; i < 10; i++)
+        _cache = cache;
+        _logger = logger;
+        for (var i = 0; i < 10; i++)
         {
             Box box = new()
             {
@@ -31,22 +34,42 @@ public class BoxRepository : IBoxRepository
 
     public async Task<bool> DeleteBox(int id)
     {
-        await Task.CompletedTask;
         _boxes.TryRemove(id, out _);
+        await _cache.RemoveAsync($"{nameof(Box)}-{id}");
+        await _cache.RemoveAsync($"{nameof(Box)}es");
         return true;
     }
 
     public async Task<Box?> GetBox(int id)
     {
+        return await _cache.GetOrCreateAsync(
+            $"{nameof(Box)}-{id}", // Unique key to the cache entry
+            async (cancel) => await GetBoxFromDb(id, cancel)
+        );
+    }
+
+    private async Task<Box?> GetBoxFromDb(int id, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("CACHE: miss for Box with id {id}", id);
         await Task.CompletedTask;
         Box? ret = _boxes.GetValueOrDefault(id);
-        if ( ret is null)
-            logger.LogWarning("Box with id {id} not found", id); // test for logging
+        if (ret is null)
+            _logger.LogWarning("Box with id {id} not found", id);
+
         return ret;
     }
 
     public async Task<IEnumerable<Box>?> GetBoxes()
     {
+        return await _cache.GetOrCreateAsync(
+            $"{nameof(Box)}es", // Unique key to the cache entry
+            async (cancel) => await GetBoxesFromDb(cancel)
+        );
+    }
+
+    private async Task<IEnumerable<Box>?> GetBoxesFromDb(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("CACHE: miss for Boxes");
         await Task.CompletedTask;
         return _boxes.Values;
     }
@@ -59,7 +82,10 @@ public class BoxRepository : IBoxRepository
         box.BoxId = _boxes.Count;
         box.CreatedOn = DateTime.UtcNow;
 
-        return _boxes.TryAdd(box.BoxId.Value, box) ? box : null;
+        var ret = _boxes.TryAdd(box.BoxId.Value, box) ? box : null;
+        await _cache.SetAsync($"{nameof(Box)}-{box.BoxId}", box);
+        await _cache.RemoveAsync($"{nameof(Box)}es");
+        return ret;
     }
 
     public async Task<Box?> UpdateBox(Box box)
@@ -69,6 +95,11 @@ public class BoxRepository : IBoxRepository
         Guard.IsNotNull(box);
         Guard.IsNotNull(box.BoxId);
 
-        return _boxes.TryUpdate(box.BoxId.Value, box, _boxes[box.BoxId.Value]) ? box : null;
+        var ret = _boxes.TryUpdate(box.BoxId.Value, box, _boxes[box.BoxId.Value]) ? box : null;
+
+        await _cache.SetAsync($"{nameof(Box)}-{box.BoxId}", box);
+        await _cache.RemoveAsync($"{nameof(Box)}es");
+        return ret;
+
     }
 }

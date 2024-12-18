@@ -3,6 +3,7 @@
 - [Aspire](#aspire)
 - [.NET 9 Features Explored](#net-9-features-explored)
 - [C# 13 Features Explored](#c-13-features-explored)
+- [Running the app](#running-the-app)
 - [API Endpoints](#api-endpoints)
   - [/api.html UI](#apihtml-ui)
   - [/scalar/v1 UI](#scalarv1-ui)
@@ -11,7 +12,7 @@
 > [.NET 8 playground](https://github.com/seekatar/dotnet8)<br>
 > [.NET 7 playground](https://github.com/seekatar/dotnet7)
 
-This is my annual repo that explores some of the more interesting new .NET and C# features. In addition to some .NET 9 and C# 13 features, I also played with Aspire.
+This is my annual repo that explores some of the more interesting new .NET and C# features. This year is a bit lighter on new features, but I took this opportunity to play with Aspire.
 
 ## Aspire
 
@@ -45,21 +46,27 @@ I also wanted to see how, if at all, this affected running the API in K8s, since
 
 ## .NET 9 Features Explored
 
+Here are some of the more interesting new features in [.NET 9](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/overview) and [ASP.NET 9](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0)
+
 - slnx files greatly simply sln files. Still a preview feature and no official doc yet, but many blog posts. Rider and VS support it.
   - [dotnet9.slnx](src/dotnet9.slnx)
-- [Static Delivery Optimization]([doclink](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-8.0#static-asset-delivery-optimization)) (doc) adds compression and better caching headers to help browsers.
+- [Static Delivery Optimization]([doclink](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-8.0#static-asset-delivery-optimization)) adds compression and better caching headers to help browsers.
   - [src/BoxUI/Program.cs](src/BoxUI/Program.cs#L44)
 - [Generate OpenAPI documents](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-9.0&tabs=visual-studio) replaces [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) to generate the OpenAPI document at runtime (or buildtime). You can then plug in your own UI such as [SwaggerUI](https://github.com/swagger-api/swagger-ui). I added [Elements](https://github.com/stoplightio/elements) and [Scalar](https://github.com/scalar/scalar).
   - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs#L31)
   - [src/BoxServerApi/wwwroot/api.html](src/BoxServerApi/wwwroot/api.html) for Elements
-- SignalR has some enhancements, like polymorphic serialization I didn't use them here.
 - [DisableHttpMetricsAttribute](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.disablehttpmetricsattribute?view=aspnetcore-9.0) [ASP.NET Core Metrics](https://learn.microsoft.com/en-us/aspnet/core/log-mon/metrics/metrics?view=aspnetcore-9.0)
 - [Hybrid Cache](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-9.0) (Currently still in preview with first release of .NET 9) combines in-memory and distributed caching.
-- LINQ
+  - [src/BoxServer/Repositories/BoxRepository.cs](src/BoxServer/Repositories/BoxRepository.cs)
+  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs) Redis setup
+
+I have samples of these in the [Notebook](dotnet9.dib)
+
+- [LINQ](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#linq)
   - [CountBy](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.countby)
   - [AggregateBy](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.aggregateby)
-- [Base64Url](https://learn.microsoft.com/en-us/dotnet/api/system.buffers.text.base64url)
-- [OrderedDictionary](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ordereddictionary-2?view=net-9.0) add access to values by index.
+- [Base64Url](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#base64url)
+- [OrderedDictionary](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#ordereddictionarytkey-tvalue) add access to values by index.
 - [Guid.CreateVersion7](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#systemguid) for generating version 7 GUIDs that are time-ordered.
 
 ## C# 13 Features Explored
@@ -76,7 +83,28 @@ There are handful of new [features](https://learn.microsoft.com/en-us/dotnet/csh
 - [`field` keyword (preview)](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/field)
   - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L18)
 
+## Running the app
+
+You do need Redis running for caching to work. The `appsettings.Development.json` has the connection string for Redis. I run it locally in Docker. I did try having Aspire start it up, but it would timeout.
+
+To run the Aspire app do `dotnet run` from `src/Box.AppHost`. Or use the helper script:
+
+```powershell
+./run.ps1 runAppHost
+```
+
+It will log a message with the URL to open in the browser.
+
+```plaintext
+info: Aspire.Hosting.DistributedApplication[0]
+      Login to the dashboard at https://localhost:17264/login?t=9c67f29218ad2e0805247cfd890ff35a
+```
+
+From the console you can see the status of the API and UI, and click on the links to open the UI. To see caching in action, you can get the list or individual Box by id and the first time it will log a message about cache miss. If you add, update, or delete a Box it invalidates the cache for the list. If you restart the app without restarting Redis, the items will still be in the cache.
+
 ## API Endpoints
+
+In addition to the CRUD endpoint for Boxes that are called by the UI, there are two Swagger UI replacements that show the API endpoints.
 
 ### /api.html UI
 

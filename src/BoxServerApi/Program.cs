@@ -32,6 +32,14 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddOpenApi("v1"); // ASP.NET 9
 
+builder.Services.AddHybridCache();
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration =
+        builder.Configuration.GetConnectionString("RedisConnectionString");
+});
+
 var app = builder.Build();
 
 // ASP.NET 9 add map and Scalar. The documentName is the value passed into the AddOpenApi method above
