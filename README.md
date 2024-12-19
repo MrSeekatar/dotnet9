@@ -22,14 +22,14 @@ The main reason I wanted to play with Aspire was to see how to integrate it with
     - Added a new page for calling the Box API CRUD endpoints.
     - Added a new page for SignalR testing.
 1. Followed the [tutorial](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/add-aspire-existing-app?tabs=unix&pivots=dotnet-cli) to add Aspire to the existing apps which was:
+    - `sudo dotnet workload uninstall aspire` # remove the old version since 9 doesn't use it3x
+    - `dotnet new install Aspire.ProjectTemplates` # install latest Aspire 9 templates
     - `dotnet new aspire-apphost -o Box.AppHost`
-        - update tfm to 9
         - add to solution
     - Add UI and API as project refs to `Box.AppHost` so can launch them
         - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxUI/BoxUI.csproj`
         - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxServerApi/BoxServerApi.csproj`
     - `dotnet new aspire-servicedefaults -o Box.ServiceDefaults`
-        - update tfm to 9
         - add to solution
     - add `Box.ServiceDefaults` ref to both API and UI so they can play in Aspire
         - `dotnet add ./BoxUI/BoxUI.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
