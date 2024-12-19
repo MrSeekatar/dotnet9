@@ -52,13 +52,13 @@ namespace BoxServer.Controllers
         [SwaggerOperation("DeleteBox")]
         public async Task<IActionResult> DeleteBox([FromRoute][Required] int id)
         {
-            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = $"Deleting box with id {id}" });
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new TypedMessage() { Text = $"Deleting box with id {id}", Type = TypedMessage.Warning});
             var result = await _boxRepository.DeleteBox(id).ConfigureAwait(false);
             return Ok(result);
         }
 
         /// <summary>
-        /// Get a list of boxs
+        /// Get a list of boxes
         /// </summary>
         /// <response code="200">successful operation</response>
         [HttpGet]
@@ -72,7 +72,7 @@ namespace BoxServer.Controllers
             {
                 return NotFound();
             }
-            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new Message { Text = "Getting all boxes" });
+            await _messageHub.Clients.All.SendAsync(MessageHub.MessageName, new TypedMessage { Text = "Getting all boxes", Type = TypedMessage.Information});
             return Ok(allBoxes);
         }
 

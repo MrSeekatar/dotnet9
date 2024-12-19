@@ -37,7 +37,7 @@ Messages:
 
 @code {
     private HubConnection? hubConnection;
-    private List<string> messages = [];
+    private readonly List<string> messages = [];
     private string? userInput;
     private string? messageInput;
 
@@ -49,7 +49,11 @@ Messages:
 
         hubConnection.On<Message>(MessageHub.MessageName, (message) =>
         {
-            var encodedMsg = $"Title: {message.Title} Text: {message.Text}";;
+            var encodedMsg = $"Title: {message.Title} Text: {message.Text}";
+            if (message is TypedMessage typedMessage)
+            {
+                encodedMsg += $" Type: {typedMessage.Type}";
+            }
             messages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
         });

@@ -59,6 +59,10 @@ Here are some of the more interesting new features in [.NET 9](https://learn.mic
 - [Hybrid Cache](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-9.0) (Currently still in preview with first release of .NET 9) combines in-memory and distributed caching.
   - [src/BoxServer/Repositories/BoxRepository.cs](src/BoxServer/Repositories/BoxRepository.cs)
   - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs) Redis setup
+- [Polymorphic type support in SignalR Hubs](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-9.0#polymorphic-type-support-in-signalr-hubs)
+  - [src/BoxUI/Components/Pages/Chat.razor](src/BoxUI/Components/Pages/Chat.razor)
+  - [src/BoxServerApi/Models/Message.cs](src/BoxServerApi/Models/Message.cs)
+  - [src/BoxServerApi/Controllers/BoxController.cs](src/BoxServerApi/Controllers/BoxController.cs)
 
 I have samples of these in the [Notebook](dotnet9.dib)
 

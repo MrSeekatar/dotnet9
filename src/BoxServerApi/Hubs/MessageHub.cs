@@ -25,6 +25,8 @@ public class MessageHub(ILogger<MessageHub> logger) : Hub<IMessageClient>
 
     public Task SendMessageToUser(string username, Message message)
     {
+        _logger.LogInformation("Sending message with title {title} to user {username}", message.Title, username);
+
         return Clients.All.ReceiveMessage(username, message);
     }
 
