@@ -52,7 +52,7 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/Properties/launchSettings.json
+# **/Properties/launchSettings.json
 
 # StyleCop
 StyleCopReport.xml
@@ -331,7 +331,7 @@ ASALocalRun/
 .vscode
 /Docker/envvars-development
 NuGet.Config
-launchSettings.json
+# launchSettings.json
 launch.json
 .DS_Store
 
@@ -358,3 +358,4 @@ wwwroot/
 *.userosscache
 *.sln.docstates
 DevOps/boxserver-api/values-replaced.yaml
+!src/BoxServerApi/wwwroot/api.html
