@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
+builder.AddServiceDefaults(); // Aspire extension method in Box.ServiceDefaults
 
 builder.Host.UseSerilog((ctx, loggerConfig) => loggerConfig.ReadFrom.Configuration(builder.Configuration));
 builder.Configuration.AddSharedDevSettings();
@@ -31,9 +31,9 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddOpenApi("v1"); // ASP.NET 9
+builder.Services.AddOpenApi("v1"); // ASP.NET 9, and line 49
 
-builder.Services.AddHybridCache();
+builder.Services.AddHybridCache(); // .NET 9
 
 builder.Services.AddSignalR();
 

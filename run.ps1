@@ -131,26 +131,6 @@ foreach ($currentTask in $Tasks) {
                     dotnet build
                 }
             }
-            'watch' {
-                executeSB -RelativeDir "src/${appName}Api" {
-                    dotnet watch
-                }
-            }
-            'runApi' {
-                executeSB -RelativeDir "src/${appName}Api" {
-                    dotnet run
-                }
-            }
-            'runApiDocker' {
-                if (!$CertPassword) {
-                    Write-Warning "No certificate password provided. Use -CertPassword"
-                    exit
-                }
-                docker run --rm -p ${TestPort}:44300 `
-                                -e ASPNETCORE_Kestrel__Certificates__Default__Password="$certPassword" `
-                                -e ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx `
-                                $imageName
-            }
             "buildApiDocker" {
                 if (!(Test-Path (Join-Path $PSScriptRoot src/aspnetapp.pfx))) {
                     Write-Warning "No certificate found at src/aspnetapp.pfx. Create with: "
@@ -163,9 +143,38 @@ foreach ($currentTask in $Tasks) {
                 buildDocker -file "BoxServerApi/Dockerfile" -imageName $imageName
                 docker tag box-api:latest loyal.azurecr.io/box-api:latest # for testing with helm since Loyal's chart uses this
             }
+            'runApi' {
+                executeSB -RelativeDir "src/${appName}Api" {
+                    dotnet run
+                }
+            }
+            'runApiDocker' {
+                if (!$CertPassword) {
+                    Write-Warning "No certificate password provided. Use -CertPassword"
+                    exit
+                }
+                docker run --rm -p ${TestPort}:44300 `
+                -e ASPNETCORE_Kestrel__Certificates__Default__Password="$certPassword" `
+                -e ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx `
+                $imageName
+            }
             "runAppHost" {
                 executeSB -RelativeDir "src/Box.AppHost" {
                     dotnet run
+                }
+            }
+            "runAspireStandAlone" {
+                docker run --rm -it -p 18888:18888 -p 4317:18889 -d --name aspire-dashboard mcr.microsoft.com/dotnet/aspire-dashboard:9.0
+                "Running. To stop it use: docker stop aspire-dashboard"
+            }
+            "runUI" {
+                executeSB -RelativeDir "src/BoxUI" {
+                    dotnet run
+                }
+            }
+            'watch' {
+                executeSB -RelativeDir "src/${appName}Api" {
+                    dotnet watch
                 }
             }
             default {

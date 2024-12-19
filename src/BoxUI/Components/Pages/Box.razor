@@ -54,9 +54,14 @@ else
     private BoxDetailsModal? boxDetailsModal;
     private AddBoxModal? addBoxModal;
 
-    protected override async Task OnInitializedAsync()
+    // OnInitializedAsync is called twice since pre-rendered, so use this to call API only once
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        boxes = (await BoxService.GetBoxes()).ToArray();
+        if (firstRender)
+        {
+            boxes = (await BoxService.GetBoxes()).ToArray();
+            StateHasChanged();
+        }
     }
 
     private async Task ShowBoxDetails(BoxServer.Models.Box box)
@@ -76,7 +81,7 @@ else
         if (confirmed)
         {
             await BoxService.DeleteBox(box.BoxId!.Value);
-            await OnInitializedAsync();
+            boxes = (await BoxService.GetBoxes()).ToArray();
         }
     }
 

@@ -1,5 +1,4 @@
-@page "/chat"
-@* @rendermode InteractiveWebAssembly *@
+@page "/messages"
 @rendermode InteractiveServer
 @using BoxServer.Hubs
 @using BoxServer.Models
@@ -7,21 +6,7 @@
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
-<PageTitle>Chat</PageTitle>
-
-<div class="form-group">
-    <label>
-        User:
-        <input @bind="userInput" />
-    </label>
-</div>
-<div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
-</div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<PageTitle>Messages</PageTitle>
 
 <div>
 Messages:
@@ -38,8 +23,6 @@ Messages:
 @code {
     private HubConnection? hubConnection;
     private readonly List<string> messages = [];
-    private string? userInput;
-    private string? messageInput;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,28 +32,18 @@ Messages:
 
         hubConnection.On<Message>(MessageHub.MessageName, (message) =>
         {
-            var encodedMsg = $"Title: {message.Title} Text: {message.Text}";
+            var type = "";
             if (message is TypedMessage typedMessage)
             {
-                encodedMsg += $" Type: {typedMessage.Type}";
+                type = $" [{typedMessage.Type}]";
             }
+            var encodedMsg = $"{message.Timestamp}{type} {message.Title}: {message.Text}";
             messages.Add(encodedMsg);
             InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();
     }
-
-    private async Task Send()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
-        }
-    }
-
-    public bool IsConnected =>
-        hubConnection?.State == HubConnectionState.Connected;
 
     public async ValueTask DisposeAsync()
     {

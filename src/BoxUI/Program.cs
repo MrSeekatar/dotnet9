@@ -3,7 +3,7 @@ using BoxUI.Services;
 using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddServiceDefaults();
+builder.AddServiceDefaults();  // Aspire extension method in Box.ServiceDefaults
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -35,9 +35,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-
 app.UseHttpsRedirection();
-
 
 app.UseAntiforgery();
 

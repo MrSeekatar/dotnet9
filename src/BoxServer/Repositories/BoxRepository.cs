@@ -10,7 +10,8 @@ namespace BoxServer.Repositories;
 
 public class BoxRepository : IBoxRepository
 {
-    private readonly ConcurrentDictionary<int, Box> _boxes = new();
+    // Simulate a database, only one instance of the server works for this example
+    private static readonly ConcurrentDictionary<int, Box> _boxes = new();
     private readonly HybridCache _cache;
     private readonly ILogger<BoxRepository> _logger;
 
