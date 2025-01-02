@@ -32,14 +32,14 @@ public class MessageHub(ILogger<MessageHub> logger) : Hub<IMessageClient>
 
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("SignalR Client Connected: {userId}", Context.UserIdentifier);
-
+        var group = "";
         var clientCode = Context.User?.Claims.SingleOrDefault(c => c.Type == ClaimTypes.GroupSid)?.Value;
         if (!string.IsNullOrEmpty(clientCode))
         {
-            _logger.LogInformation("With group of {clientCode}", clientCode);
+            group = clientCode;
             await Groups.AddToGroupAsync(Context.ConnectionId, clientCode);
         }
+        _logger.LogInformation("SignalR Client Connected with userId: '{userId}' and group: '{group}'", Context.UserIdentifier, group);
         await base.OnConnectedAsync();
     }
 }

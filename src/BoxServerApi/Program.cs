@@ -1,14 +1,10 @@
-using System.Configuration;
-using BoxServer;
 using BoxServer.Extensions;
 using Seekatar.Tools;
 using Serilog;
-using Serilog.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Hosting;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using BoxServer.Hubs;
-using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,11 +33,8 @@ builder.Services.AddHybridCache(); // .NET 9
 
 builder.Services.AddSignalR();
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration =
-        builder.Configuration.GetConnectionString("RedisConnectionString");
-});
+builder.AddRedisClient("cache"); // Aspire name of Redis server Box.AppHost/Program.cs
+
 
 var app = builder.Build();
 
