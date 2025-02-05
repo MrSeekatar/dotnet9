@@ -1,0 +1,836 @@
+{
+  "$comment": "This is most of the models from the openapi.yml, created by doing a 'Convert and save as JSON' in the tool",
+  "$defs": {
+    "calculation": {
+      "description": "Calculation to set a variable",
+      "properties": {
+        "expression": {
+          "description": "C# expression to calculate the value",
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of this calculation",
+          "type": "string"
+        },
+        "variable": {
+          "description": "Variable where to store the result",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "formItem": {
+      "description": "Base of for Forms and List of Forms",
+      "properties": {
+        "active": {
+          "default": true,
+          "description": "If not active, the Form can not run. Use for drafts Forms",
+          "type": "boolean"
+        },
+        "clientId": {
+          "description": "ClientId for this form",
+          "type": "string"
+        },
+        "createdOn": {
+          "description": "Set by the system when the form is created",
+          "format": "date-time",
+          "type": "string"
+        },
+        "description": {
+          "description": "English internal description",
+          "type": "string"
+        },
+          "displayName": {
+            "description": "Friendly, English name",
+            "type": "string"
+          },
+        "formId": {
+          "description": "Set by the system, the id of this form. This + version is unique",
+          "format": "uuid",
+          "type": "string"
+        },
+        "markets": {
+          "description": "Array of Markets for this form",
+          "items": {
+            "$ref": "#/$defs/market"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Name of item, which must be valid C# name",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Array of tags for this form",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "version": {
+          "description": "Set by the system, the numeric version of this form",
+          "format": "int32",
+          "type": "integer"
+        },
+        "versionedFormId": {
+          "description": "Set by the system, the unique id for this version",
+          "format": "uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "active",
+        "name"
+      ],
+      "type": "object"
+    },
+    "formStep": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/formStepBase"
+        }
+      ],
+      "description": "Step object on a Form",
+      "properties": {
+        "values": {
+          "description": "The values to send to the client for this step.",
+          "items": {
+            "$ref": "#/$defs/variableBase"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "nameId"
+      ],
+      "type": "object"
+    },
+    "formStepBase": {
+      "description": "Base for FormStep and FormStepDto",
+      "properties": {
+        "backText": {
+          "description": "Override default 'Back' button text",
+          "format": "uuid",
+          "type": "string"
+        },
+        "completedTimestamp": {
+          "description": "Set by the system, the completed timestamp of this step",
+          "format": "date-time",
+          "type": "string"
+        },
+        "description": {
+          "description": "Mapped Id of the step description",
+          "type": "string"
+        },
+        "name": {
+          "description": "Unique name of this step within the Form, which must be a valid C# name",
+          "type": "string"
+        },
+        "nameId": {
+          "description": "Mapped Id of the step name",
+          "format": "uuid",
+          "type": "string"
+        },
+        "nextStepExpressions": {
+          "description": "C# boolean expressions to determine the first step, if the form has multiple first steps",
+          "items": {
+            "$ref": "#/$defs/nextStepExpression"
+          },
+          "type": "array"
+        },
+        "nextText": {
+          "description": "Override default 'Next' button text",
+          "format": "uuid",
+          "type": "string"
+        },
+        "postCalculations": {
+          "description": "Calculations to set variables after this step",
+          "items": {
+            "$ref": "#/$defs/calculation"
+          },
+          "type": "array"
+        },
+        "preCalculations": {
+          "description": "Calculations to set variables before this step",
+          "items": {
+            "$ref": "#/$defs/calculation"
+          },
+          "type": "array"
+        },
+        "startedTimestamp": {
+          "description": "Set by the system, the start timestamp of this step",
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "nameId"
+      ],
+      "type": "object"
+    },
+    "market": {
+      "description": "Subset of Platform.Core.Models.Market",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "entityId": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entityId",
+        "displayName"
+      ],
+      "type": "object"
+    },
+    "namedValue": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "nextStepExpression": {
+      "description": "C# boolean expression to determine the next step",
+      "properties": {
+        "expression": {
+          "description": "C# boolean expression to determine the next step. If not supplied, evaluates as true",
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of this expression",
+          "type": "string"
+        },
+        "nextStepName": {
+          "description": "Name of the next step if the expression is true",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "nextStepName"
+      ],
+      "type": "object"
+    },
+    "variable": {
+      "description": "Variable object that can be of different types",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/variableBool"
+        },
+        {
+          "$ref": "#/$defs/variableDate"
+        },
+        {
+          "$ref": "#/$defs/variableDateTime"
+        },
+        {
+          "$ref": "#/$defs/variableDouble"
+        },
+        {
+          "$ref": "#/$defs/variableInt"
+        },
+        {
+          "$ref": "#/$defs/variableMultiSelect"
+        },
+        {
+          "$ref": "#/$defs/variableSingleSelect"
+        },
+        {
+          "$ref": "#/$defs/variableSingleConditionalSelect"
+        },
+        {
+          "$ref": "#/$defs/variableStatic"
+        },
+        {
+          "$ref": "#/$defs/variableString"
+        }
+      ]
+    },
+    "variableBase": {
+      "description": "Base of for variables",
+      "properties": {
+        "description": {
+          "description": "When created, an mapped string GUID. Then set to that value when sent to the client",
+          "type": "string"
+        },
+        "displayName": {
+          "description": "When created, an mapped string GUID. Then set to that value when sent to the client",
+          "type": "string"
+        },
+        "displayType": {
+          "description": "Hint to UI about how to display this. E.g 'tel1', 'zip1' for telephone or zip code",
+          "type": "string"
+        },
+        "groupName": {
+          "description": "Group name for this variable",
+          "type": "string"
+        },
+        "isHidden": {
+          "default": false,
+          "description": "Should this not be shown in the UI?",
+          "type": "boolean"
+        },
+        "isReadOnly": {
+          "default": false,
+          "description": "Should this be read-only the UI?",
+          "type": "boolean"
+        },
+        "isRequired": {
+          "default": false,
+          "description": "Should this be required in the UI?",
+          "type": "boolean"
+        },
+        "isSensitive": {
+          "default": false,
+          "description": "Should this be encrypted in db?",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Name of this variable, which must be a valid C# name",
+          "type": "string"
+        },
+        "placeholder": {
+          "description": "Placeholder text for this variable",
+          "type": "string"
+        },
+        "requiredMessage": {
+          "description": "Generic field is required message",
+          "type": "string"
+        },
+        "subtitle": {
+          "description": "Subtitle for this variable",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/variableType",
+          "description": "Type of this variable"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "type": "object"
+    },
+    "variableBool": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "Bool variable",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["bool"]
+        },
+        "falseLabel": {
+          "description": "Label for false. When created, an mapped string GUID. Then set to that value when sent to the client",
+          "type": "string"
+        },
+        "trueLabel": {
+          "description": "Label for true. When created, an mapped string GUID. Then set to that value when sent to the client",
+          "type": "string"
+        },
+        "value": {
+          "description": "When created optional default value",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "trueLabel",
+        "falseLabel"
+      ],
+      "type": "object"
+    },
+    "variableConditionalSelectOption": {
+      "description": "Option for this conditional select",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["conditionalSelectOption"]
+        },
+        "expression": {
+          "description": "Boolean expression when this set of options should be used",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/variableSelectOption"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "expression",
+        "options"
+      ],
+      "type": "object"
+    },
+    "variableDate": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableDateTimeBase"
+        }
+      ],
+      "properties" :{
+        "type": {
+          "type": "string",
+          "enum": ["date"]
+        }
+      },
+      "description": "Date variable",
+      "type": "object"
+    },
+    "variableDateTime": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableDateTimeBase"
+        }
+      ],
+      "properties" :{
+        "type": {
+          "type": "string",
+          "enum": ["dateTime"]
+        }
+      },
+      "description": "Date variable",
+      "type": "object"
+    },
+    "variableDateTimeBase": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "DateTime variable",
+      "properties": {
+        "max": {
+          "description": "Special format like now or now+30d",
+          "type": "string"
+        },
+        "maxMessage": {
+          "description": "Message to display if value > min",
+          "type": "string"
+        },
+        "min": {
+          "description": "Special format like now or now+30d",
+          "type": "string"
+        },
+        "minMessage": {
+          "description": "Message to display if value < min",
+          "type": "string"
+        },
+        "value": {
+          "description": "When created optional default value",
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "variableDouble": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableWithUnits"
+        }
+      ],
+      "description": "Double variable",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["double"]
+        },
+        "decimalPlaces": {
+          "description": "Number of decimal places to show",
+          "type": "integer"
+        },
+        "max": {
+          "description": "Max value for this variable",
+          "format": "double",
+          "type": "number"
+        },
+        "min": {
+          "description": "Min value for this variable",
+          "format": "double",
+          "type": "number"
+        },
+        "value": {
+          "description": "When created optional default value",
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "variableInt": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableWithUnits"
+        }
+      ],
+      "description": "Int variable",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["int"]
+        },
+        "max": {
+          "description": "Max value for this variable",
+          "type": "integer"
+        },
+        "min": {
+          "description": "Min value for this variable",
+          "type": "integer"
+        },
+        "value": {
+          "description": "When created optional default value",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "variableMultiSelect": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSelect"
+        }
+      ],
+      "description": "Multi-select type list or combo box",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["variableMultiSelect"]
+        },
+        "value": {
+          "description": "Array of selected values",
+          "items": {
+            "description": "Selected value",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "variableSelect": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "Base for single and multi-select types",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["select"]
+        },
+        "options": {
+          "description": "Array of options to display",
+          "items": {
+            "$ref": "#/$defs/variableSelectOption"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "variableSelectOption": {
+      "description": "A selection option",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["selectOption"]
+        },
+        "label": {
+          "description": "When created, an mapped string GUID. Then set to that value when sent to the client",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value for this selection.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "variableSingleConditionalSelect": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSingleSelectBase"
+        }
+      ],
+      "description": "Conditional single select variable",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["singleConditionalSelect"]
+        },
+        "conditionalOptions": {
+          "items": {
+            "$ref": "#/$defs/variableConditionalSelectOption"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "variableSingleSelect": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSingleSelectBase"
+        }
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["singleSelect"]
+        }
+      },
+      "description": "Single-select type list or combo box",
+      "type": "object"
+    },
+    "variableSingleSelectBase": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSelect"
+        }
+      ],
+      "description": "Base for single-select type list or combo box",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["singleSelectBase"]
+        },
+        "canEnterValue": {
+          "default": false,
+          "description": "Should the user be able to enter a value?",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "On create, the default selected value",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "variableSingleSelectGroup": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSingleSelectBase"
+        }
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["singleSelectGroup"]
+        }
+      },
+      "description": "Single-select group that has options for multiple SingleSelectGroupItems",
+      "type": "object"
+    },
+    "variableSingleSelectGroupItem": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableSingleSelectBase"
+        }
+      ],
+      "description": "Single-select item that gets its options from a group",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["singleSelectGroupItem"]
+        },
+        "singleSelectGroupName": {
+          "description": "Group name for this variable",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "variableStatic": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "Static variable that has no value returned from the client or stored",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["static"]
+        },
+        "imageUrl": {
+          "description": "An Image URL to show",
+          "type": "string"
+        },
+        "isBreak": {
+          "default": false,
+          "description": "Is this a break in the UI",
+          "type": "boolean"
+        },
+        "isGroup": {
+          "default": false,
+          "description": "Is this a group in the UI",
+          "type": "boolean"
+        },
+        "linkUrl": {
+          "description": "A link URL to use for the DisplayName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "isBreak",
+        "isGroup"
+      ],
+      "type": "object"
+    },
+    "variableString": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "String variable",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string"]
+        },
+        "maxLen": {
+          "description": "Max length for this variable",
+          "type": "integer"
+        },
+        "maxLenMessage": {
+          "description": "Message to display if value > min length",
+          "type": "string"
+        },
+        "minLen": {
+          "description": "Min length for this variable",
+          "type": "integer"
+        },
+        "minLenMessage": {
+          "description": "Message to display if value < min length",
+          "type": "string"
+        },
+        "regex": {
+          "description": "Pattern to match, e.g. (\\d3)-\\d3-\\d4",
+          "type": "string"
+        },
+        "regexMessage": {
+          "description": "Message to display if regex fails",
+          "type": "string"
+        },
+        "value": {
+          "description": "When created optional default value",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "variableWithUnits": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/variableBase"
+        }
+      ],
+      "description": "Base for variable with units (double and int)",
+      "properties": {
+        "maxMessage": {
+          "description": "Message to display if value > min",
+          "type": "string"
+        },
+        "minMessage": {
+          "description": "Message to display if value < min",
+          "type": "string"
+        },
+        "units": {
+          "description": "optional name of the \"units\", e.g. Enter weight ____ pounds",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "http://loyalhealth.com/configurable-form/",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "$ref": "#/$defs/formItem"
+    }
+  ],
+  "properties": {
+    "defaultBackText": {
+      "description": "Global override default 'Back' button text",
+      "format": "uuid",
+      "type": "string"
+    },
+    "defaultNextText": {
+      "description": "Global override default 'Next' button text",
+      "format": "uuid",
+      "type": "string"
+    },
+    "descriptionId": {
+      "description": "Mapped Id of the form description",
+      "format": "uuid",
+      "type": "string"
+    },
+    "firstStepExpressions": {
+      "description": "C# boolean expressions to determine the first step, if the form has multiple first steps",
+      "items": {
+        "$ref": "#/$defs/nextStepExpression"
+      },
+      "type": "array"
+    },
+    "name": {
+      "description": "Name of item, which must be valid C# name",
+      "type": "string"
+    },
+    "displayName": {
+      "description": "Friendly, English name",
+      "type": "string"
+    },
+    "steps": {
+      "description": "Array of steps",
+      "items": {
+        "$ref": "#/$defs/formStep"
+      },
+      "type": "array"
+    },
+    "timeoutMin": {
+      "default": 0,
+      "description": "How many minutes until considered timed out. 0 for no timeout.",
+      "format": "double",
+      "type": "number"
+    },
+    "variables": {
+      "description": "Global variables",
+      "items": {
+        "$ref": "#/$defs/variable"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "name",
+    "displayName"
+  ],
+  "title": "Configurable form schema",
+  "type": "object"
+}

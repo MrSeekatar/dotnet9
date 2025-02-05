@@ -349,7 +349,7 @@ global.json
 # Blazor specific ignores
 bin/
 obj/
-wwwroot/
+# wwwroot/
 .vscode/
 .idea/
 *.swp

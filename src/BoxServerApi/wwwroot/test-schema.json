@@ -1,0 +1,49 @@
+{
+  "oneOf": [
+    {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["int"]
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required":[
+        "type",
+        "value"
+      ]
+    },
+    {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string"]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required":[
+        "type",
+        "value"
+      ]
+    },
+    {
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required":[
+        "type",
+        "value"
+      ]
+    }
+  ]
+}
+
