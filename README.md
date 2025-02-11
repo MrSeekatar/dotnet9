@@ -48,16 +48,16 @@ Here are some of the more interesting new features in [.NET 9](https://learn.mic
 
 - slnx files greatly simply sln files. Still a preview feature and no official doc yet, but many blog posts. Rider and VS support it.
   - [dotnet9.slnx](src/dotnet9.slnx)
-- [Static Delivery Optimization]([doclink](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-8.0#static-asset-delivery-optimization)) adds compression and better caching headers to help browsers.
-  - [src/BoxUI/Program.cs](src/BoxUI/Program.cs)
+- [Static Delivery Optimization](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-8.0#static-asset-delivery-optimization) adds compression and better caching headers to help browsers.
+  - [src/BoxUI/Program.cs](src/BoxUI/Program.cs#L42)
 - [Generate OpenAPI documents](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/openapi/aspnetcore-openapi?view=aspnetcore-9.0&tabs=visual-studio) replaces [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore) to generate the OpenAPI document at runtime (or buildtime). You can then plug in your own UI such as [SwaggerUI](https://github.com/swagger-api/swagger-ui). I added [Elements](https://github.com/stoplightio/elements) and [Scalar](https://github.com/scalar/scalar).
-  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs)
+  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs#L42) to enable and add Scalar
   - [src/BoxServerApi/wwwroot/api.html](src/BoxServerApi/wwwroot/api.html) for Elements
 - [Hybrid Cache](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/hybrid?view=aspnetcore-9.0) (Currently still in preview with first release of .NET 9) combines in-memory and distributed caching.
-  - [src/BoxServer/Repositories/BoxRepository.cs](src/BoxServer/Repositories/BoxRepository.cs)
-  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs) Redis setup
+  - [src/BoxServer/Repositories/BoxRepository.cs](src/BoxServer/Repositories/BoxRepository.cs#L46)
+  - [src/BoxServerApi/Program.cs](src/BoxServerApi/Program.cs#L32) Redis setup
 - [Polymorphic type support in SignalR Hubs](https://learn.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-9.0?view=aspnetcore-9.0#polymorphic-type-support-in-signalr-hubs)
-  - [src/BoxUI/Components/Pages/Messages.razor](src/BoxUI/Components/Pages/Messages.razor)
+  - [src/BoxUI/Components/Pages/Messages.razor](src/BoxUI/Components/Pages/Messages.razor#L39)
   - [src/BoxServerApi/Models/Message.cs](src/BoxServerApi/Models/Message.cs)
   - [src/BoxServerApi/Controllers/BoxController.cs](src/BoxServerApi/Controllers/BoxController.cs)
 
@@ -75,14 +75,14 @@ I have samples of these in the [Notebook](dotnet9.dib)
 There are handful of new [features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-13) in C# 13. Nothing too dramatic, and I've used a few of them.
 
 - [`params` can take collections](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-13#params-collections)
-  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs)
+  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L30)
 - [New `Lock` object](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-13#new-lock-object)
-  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs)
+  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L10)
 - [`partial` can be used on properties](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-13#more-partial-members)
-  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs)
-  - [src/BoxServer/Services/BoxProcessorGenerated.cs](src/BoxServer/Services/BoxProcessorGenerated.cs)
+  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L11)
+  - [src/BoxServer/Services/BoxProcessorGenerated.cs](src/BoxServer/Services/BoxProcessorGenerated.cs#L10)
 - [`field` keyword (preview)](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/field)
-  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs)
+  - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L19)
 
 ## Running the app
 

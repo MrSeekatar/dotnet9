@@ -6,9 +6,9 @@
 
 # .NET 9 Samples
 
-These are mainly from the doc, with tweaks to help me understand them better.
+These are mainly from the [doc](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries), with tweaks to help me understand them better.
 
-## LINQ AggregateBy
+## [LINQ AggregateBy](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.aggregateby)
 
 Avoids intermediate `GroupBy`
 
@@ -32,12 +32,12 @@ var aggregatedData =
 
 foreach (var item in aggregatedData)
 {
-    Console.WriteLine(item);
+    WriteLine(item);
 }
 
 #!markdown
 
-## LINQ CountBy
+## [LINQ CountBy](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.countby)
 
 Avoids intermediate `GroupBy`
 
@@ -55,14 +55,14 @@ var mostFrequentWord = sourceText
 
 foreach (var pair in mostFrequentWord)
 {
-    Console.WriteLine($"{pair.Key}: {pair.Value}");
+    WriteLine($"{pair.Key}: {pair.Value}");
 }
 
 #!markdown
 
-## OrderedDictionary
+## [OrderedDictionary](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#ordereddictionarytkey-tvalue)
 
-Allows accessing dictionary values by index.
+Keeps order of items in dictionary and allows accessing dictionary values by index.
 
 #!csharp
 
@@ -83,7 +83,7 @@ d.Insert(0, "e", 5);
 WriteLine("Enumerate dictionary");
 foreach (KeyValuePair<string, int> entry in d)
 {
-    Console.WriteLine(entry);
+    WriteLine(entry);
 }
 
 WriteLine("Enumerate by index");
@@ -94,9 +94,9 @@ for ( int i = 0; i < d.Count; i++ )
 
 #!markdown
 
-## Base64Url
+## [Base64Url](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-9/libraries#base64url)
 
-Encodes bytes to Base64 without padding or URL-unsafe characters.
+Encodes bytes to Base64 without padding or URL-unsafe characters like `/` and `+`, which are valid Base64 characters.
 
 #!csharp
 
@@ -106,13 +106,19 @@ using System;
 using System.Text;
 
 
-var bytes = ASCIIEncoding.ASCII.GetBytes("HelloWorld");
-Console.WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)}   is {ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}");
-Console.WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is {ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}");
+var bytes = ASCIIEncoding.ASCII.GetBytes("subjects?_d=1");
+WriteLine("Encoding subjects?_d=1");
+WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)}   is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
+WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is '{ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}' 👈 no slash");
+bytes = ASCIIEncoding.ASCII.GetBytes("-->");
+WriteLine();
+WriteLine("Encoding of '-->'");
+WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)} is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
+WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is '{ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}' 👈 no plus");
 
 #!markdown
 
-## Guid.CreateVersion7 
+## [Guid.CreateVersion7](https://learn.microsoft.com/en-us/dotnet/api/system.guid.createversion7#system-guid-createversion7) 
 
 For creating time ordered Guids
 
