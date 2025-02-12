@@ -1,8 +1,9 @@
 # .NET 9 Playground <!-- omit in toc -->
 
-- [Aspire](#aspire)
+- [⚠️ .NET 9 SDK does transitive NuGet vuln checking on `dotnet restore`](#️-net-9-sdk-does-transitive-nuget-vuln-checking-on-dotnet-restore)
 - [.NET 9 Features Explored](#net-9-features-explored)
 - [C# 13 Features Explored](#c-13-features-explored)
+- [Aspire](#aspire)
 - [Running the app](#running-the-app)
 - [API Endpoints](#api-endpoints)
   - [/api.html UI](#apihtml-ui)
@@ -11,36 +12,24 @@
 
 This is my annual repo that explores some of the more interesting new .NET and C# features. This year is a bit lighter on new features, but I took this opportunity to play with Aspire.
 
-## Aspire
+## ⚠️ .NET 9 SDK does transitive NuGet vuln checking on `dotnet restore`
 
-[Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) is an orchestrator that allows a developer to run multiple apps locally, automatically connecting them together, and adding tons of observability with its own console. It uses containers to do all this magic, so does require Docker Desktop or some other Docker runtime to be installed locally. It's kinda like Docker Compose on steroids.
+If you install the .NET 9 SDK and restore an app for earlier versions (7,8), you may get warnings or errors like this.
 
-The main reason I wanted to play with Aspire was to see how to integrate it with an existing backend app and what effect it has for deploying to Kubernetes. The high level steps I followed were:
+```
+1>MyApp.csproj: Error NU1903 : Warning As Error: Package 'Microsoft.Extensions.Caching.Memory' 6.0.1 has a known high severity vulnerability, https://github.com/advisories/GHSA-qj66-m88j-hmgj
+```
 
-1. Create a new backend API using my own dotnet template. For lack of a better name I called it the Box server. (I'd already used Widget and Thingy in other projects)
-1. Add a Blazor front end using `dotnet new blazor`
-    - Added a new page for calling the Box API CRUD endpoints.
-    - Added a new page for SignalR testing.
-1. Followed the [tutorial](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/add-aspire-existing-app?tabs=unix&pivots=dotnet-cli) to add Aspire to the existing apps which was:
-    - `sudo dotnet workload uninstall aspire` # remove the old version since 9 doesn't use it3x
-    - `dotnet new install Aspire.ProjectTemplates` # install latest Aspire 9 templates
-    - `dotnet new aspire-apphost -o Box.AppHost`
-        - add to solution
-    - Add UI and API as project refs to `Box.AppHost` so can launch them
-        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxUI/BoxUI.csproj`
-        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxServerApi/BoxServerApi.csproj`
-    - `dotnet new aspire-servicedefaults -o Box.ServiceDefaults`
-        - add to solution
-    - add `Box.ServiceDefaults` ref to both API and UI so they can play in Aspire
-        - `dotnet add ./BoxUI/BoxUI.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
-        - `dotnet add ./BoxServerApi/BoxServerApi.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
-    - add `builder.AddServiceDefaults();` after `CreateBuilder()` in UI and API
-    - Suppress `CS1591` in the API since generated code doesn't add XML comments
-    - Edit [Box.AppHost/Program.cs](src/Box.AppHost/Program.cs) to add the API, and UI the refers to the API
+This is because .NET 9 now checks nested NuGets for vulns, as described in the [breaking changes](https://learn.microsoft.com/en-us/dotnet/core/compatibility/sdk/9.0/nugetaudit-transitive-packages). To turn this off for non-.NET 9 packages you can add a `Directory.build.props` file into your sln's folder with this content. 
 
-At this point I could do `dotnet run` from `src/Box.AppHost` and it will launch its console, the API and the UI. From the console you can see status, messages, logs, and metrics. (Note trying to launch from Rider gave me an error `Unable to get the project output for net8.0` )
+```xml
+<Project>
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net9.0'">
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+</Project>
+```
 
-I also wanted to see how, if at all, this affected running the API in K8s, since that is my typical deployment environment at work. I could run the app in Docker or Kubernetes without any problems.
 
 ## .NET 9 Features Explored
 
@@ -83,6 +72,37 @@ There are handful of new [features](https://learn.microsoft.com/en-us/dotnet/csh
   - [src/BoxServer/Services/BoxProcessorGenerated.cs](src/BoxServer/Services/BoxProcessorGenerated.cs#L10)
 - [`field` keyword (preview)](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/field)
   - [src/BoxServer/Services/BoxProcessor.cs](src/BoxServer/Services/BoxProcessor.cs#L19)
+
+## Aspire
+
+[Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview) is an orchestrator that allows a developer to run multiple apps locally, automatically connecting them together, and adding tons of observability with its own console. It uses containers to do all this magic, so does require Docker Desktop or some other Docker runtime to be installed locally. It's kinda like Docker Compose on steroids.
+
+The main reason I wanted to play with Aspire was to see how to integrate it with an existing backend app and what effect it has for deploying to Kubernetes. The high level steps I followed were:
+
+1. Create a new backend API using my own dotnet template. For lack of a better name I called it the Box server. (I'd already used Widget and Thingy in other projects)
+1. Add a Blazor front end using `dotnet new blazor`
+    - Added a new page for calling the Box API CRUD endpoints.
+    - Added a new page for SignalR testing.
+1. Followed the [tutorial](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/add-aspire-existing-app?tabs=unix&pivots=dotnet-cli) to add Aspire to the existing apps which was:
+    - `sudo dotnet workload uninstall aspire` # remove the old version since 9 doesn't use it3x
+    - `dotnet new install Aspire.ProjectTemplates` # install latest Aspire 9 templates
+    - `dotnet new aspire-apphost -o Box.AppHost`
+        - add to solution
+    - Add UI and API as project refs to `Box.AppHost` so can launch them
+        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxUI/BoxUI.csproj`
+        - `dotnet add ./Box.AppHost/Box.AppHost.csproj reference ./BoxServerApi/BoxServerApi.csproj`
+    - `dotnet new aspire-servicedefaults -o Box.ServiceDefaults`
+        - add to solution
+    - add `Box.ServiceDefaults` ref to both API and UI so they can play in Aspire
+        - `dotnet add ./BoxUI/BoxUI.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
+        - `dotnet add ./BoxServerApi/BoxServerApi.csproj reference ./Box.ServiceDefaults/Box.ServiceDefaults.csproj`
+    - add `builder.AddServiceDefaults();` after `CreateBuilder()` in UI and API
+    - Suppress `CS1591` in the API since generated code doesn't add XML comments
+    - Edit [Box.AppHost/Program.cs](src/Box.AppHost/Program.cs) to add the API, and UI the refers to the API
+
+At this point I could do `dotnet run` from `src/Box.AppHost` and it will launch its console, the API and the UI. From the console you can see status, messages, logs, and metrics. (Note trying to launch from Rider gave me an error `Unable to get the project output for net8.0` )
+
+I also wanted to see how, if at all, this affected running the API in K8s, since that is my typical deployment environment at work. I could run the app in Docker or Kubernetes without any problems.
 
 ## Running the app
 

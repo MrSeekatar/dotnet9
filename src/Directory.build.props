@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- here for demo, since this is a .NET 9 app, not needed -->
+  <!-- Don't check transitive NuGet vulns for TFM != .NET 9 -->
+  <PropertyGroup Condition="'$(TargetFramework)' != 'net9.0'">
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <NoWarn>1701;1702;CA2007</NoWarn>
+  </PropertyGroup>
+
+</Project>

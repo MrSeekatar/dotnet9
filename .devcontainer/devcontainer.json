@@ -1,0 +1,25 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/dotnet:dev-9.0",
+	"features": {
+		"ghcr.io/devcontainers/features/powershell:1": {
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"moby": true,
+			"azureDnsAutoDetection": true,
+			"installDockerBuildx": true,
+			"installDockerComposeSwitch": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "none"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-dotnettools.dotnet-interactive-vscode",
+				"ms-dotnettools.csdevkit"
+			]
+		}
+	}
+
+}

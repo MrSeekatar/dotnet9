@@ -14,6 +14,8 @@ Avoids intermediate `GroupBy`
 
 #!csharp
 
+using static System.Console;
+
 (string id, int score)[] data =
     [
         ("0", 42),
@@ -108,13 +110,13 @@ using System.Text;
 
 var bytes = ASCIIEncoding.ASCII.GetBytes("subjects?_d=1");
 WriteLine("Encoding subjects?_d=1");
-WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)}   is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
 WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is '{ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}' 👈 no slash");
+WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)}   is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
 bytes = ASCIIEncoding.ASCII.GetBytes("-->");
 WriteLine();
 WriteLine("Encoding of '-->'");
-WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)} is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
 WriteLine($"ConvertToBase64String {Convert.ToBase64String(bytes)} is '{ASCIIEncoding.ASCII.GetString(Convert.FromBase64String(Convert.ToBase64String(bytes)))}' 👈 no plus");
+WriteLine($"Base64Url             {Base64Url.EncodeToString(bytes)} is '{ASCIIEncoding.ASCII.GetString(Base64Url.DecodeFromUtf8(Base64Url.EncodeToUtf8(bytes)))}'");
 
 #!markdown
 
